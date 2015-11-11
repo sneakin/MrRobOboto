@@ -1,167 +1,115 @@
+local number = require("sneaky/number")
 local sides = require("sides")
-local robot = require("robot")
 local component = require("component")
-local crobot = component.robot
+local robot = component.robot
 local rob = require("rob")
+local robinv = require("rob/inventory")
+local areas = require("rob/pathing/areas")
+local volumes = require("rob/pathing/volumes")
 
 local filler = {}
 
-function filler.backToStart(width, length)
-   if length%2 == 0 then
-      robot.turnLeft()
-   else
-      robot.turnRight()
+local default_blocks = {
+   "stone", "dirt", "netherrack", "gravel", "sand", "grass"
+}
+
+function select_block(x, y, w, l, z, h)
+   if robinv.count() <= 0 then
+      assert(robinv.selectFirst(default_blocks), "no item")
    end
 
-   local good, y = rob.forwardBy(length-1)
-   if not good then
-      return false, 0, y
-   end
-
-   robot.turnRight()
-   local good, x = rob.forwardBy(width-1)
-   if not good then
-      return false, x, y
-   end
-
-   return true, x+1, y+1
-end
-
-function filler.actThenMove(action, dir, ...)
-   print("actThenMove", action, dir, ...)
-   local r, why = action(dir, ...)
-   if r then
-      return crobot.move(dir)
-   else
-      print(r, why)
-      return false
-   end
-end
-
-function filler.areaInner(width, length, action, ...)
-   local rx, ry = 1, 1
-   
-   for y = 1,length do
-      ry = y
-      print("Progress " .. ry .. "/" .. length)
-      
-      for x = 1,width-1 do
-         if y%2 == 0 then
-            rx = width - (x-1)
-         else
-            rx = x
-         end
-         
-         local r, d = filler.actThenMove(action, sides.forward, rx, ry, width, length, ...)
-         if not r then
-            return false, rx, ry
-         end
-      end
-
-      if y == length then break end
-
-      if y%2 == 0 then
-         robot.turnRight()
-      else
-         robot.turnLeft()
-      end
-
-      local r, d = filler.actThenMove(action, sides.forward, rx, ry+1, width, length, ...)
-      if not r then
-         return false, rx, ry
-      end
-
-      if y%2 == 0 then
-         robot.turnRight()
-      else
-         robot.turnLeft()
-      end
-   end
-
-   if (ry % 2 == 0) then
-      rx = rx - 1
-   else
-      rx = rx + 1
-   end
-
-   return true, rx, ry
-end
-
-function filler.debugAction(...)
-   print(...)
    return true
 end
 
-function filler.area(width, length, action)
-   rob.busy()
-   
-   local good, x, y = filler.areaInner(width, length, action or filler.debugAction)
-   if not good then
-      print("Failed to traverse area", x, y)
+function fill_action_floor(points, dir, x, y, w, h, block_selector, ...)
+   if not block_selector(x, y, w, h, ...) then
+      return true
    end
-   
-   if good then
-      rob.cool()
+
+   local real_dir = dir
+
+   if dir == sides.back then
+      real_dir = sides.forward
+   elseif dir == sides.up then
+      real_dir = sides.down
+   elseif dir == sides.down then
+      real_dir = sides.up
    else
-      rob.notcool()
+      error("bad side") -- TODO reflection?
    end
 
-   local ret_good, rx, ry = filler.backToStart(x, y)
-   if not ret_good then
-      print("Failed to return to the start.", rx, ry)
-   end
-
-   return (good and ret_good), x - rx, y - ry
-end
-
-function filler.volumeUp(width, length, height, action)
-   local rz = 0
+   robot.place(real_dir)
    
-   for z = 1, height do
-      rz = z
-      
-      if not filler.area(width, length, action, rz, height) then
-         rob.downBy(rz)
-         return false
-      end
-      
-      rob.turnAround()
-
-      if rz < height then
-         if not filler.actThenMove(action, sides.up, 1, 1, width, length, rz, height) then
-            rob.downBy(rz)
-            return false
-         end
-      end
-   end
-
-   return rob.downBy(rz - 1)
+   return true
 end
 
-function filler.volumeDown(width, length, depth, action)
-   local rz = 0
+function fill_action_3d(points, dir, x, y, w, l, z, h, block_selector)
+   if not block_selector(x, y, w, l, z, h) then
+      return true
+   end
+
+   local real_dir = dir
+
+   if dir == sides.back then
+      real_dir = sides.front
+   elseif dir == sides.front then
+      real_dir = sides.back
+   elseif dir == sides.up then
+      real_dir = sides.down
+   elseif dir == sides.down then
+      real_dir = sides.up
+   else
+      error("bad side " .. dir) -- TODO reflection?
+   end
    
-   for z = depth, 1, -1 do
-      rz = z
-      
-      if not filler.area(width, length, action, rz, depth) then
-         rob.upBy(rz)
-         return false
-      end
-      
-      rob.turnAround()
-
-      if rz > 1 then
-         if not filler.actThenMove(action, sides.down, 1, 1, width, length, rz, depth) then
-            rob.upBy(rz)
-            return false
-         end
-      end
-   end
-
-   return rob.upBy(depth - 1)
+   robot.place(real_dir)
+   
+   return true
 end
 
---------
+function filler.floor(width, length, block_selector, ...)
+   block_selector = block_selector or select_block
+   local mark = rob.checkpoint()
+
+   block_selector(1, 1, width, length, ...)
+   
+   rob.forward()
+   areas.move_to_end(rob.checkpoints, width, length)
+   areas.square_back(width, length, number.odd(length), fill_action_floor, block_selector, ...)
+   areas.moveThenAct(rob.checkpoints, fill_action_floor, sides.back, 1, length, width, length, block_selector, ...)
+   rob.pop_to(mark)
+end
+
+function filler.fillUpConfined(width, length, height, block_selector)
+   block_selector = block_selector or select_block
+   local mark = rob.checkpoint()
+
+   rob.forward()
+   rob.turn(2)
+   volumes.cubeBackUp(width, length, height, fill_action_3d, block_selector)
+   rob.forward()
+   rob.replace_from(mark, function(points)
+                       points:down(height):turn(2)
+   end)
+end
+
+function filler.fillUp(width, length, height, block_selector, ...)
+   block_selector = block_selector or select_block
+   local mark = rob.checkpoint()
+
+   for z = 1,height do
+      filler.floor(width, length, block_selector, z, height, ...)
+      rob.up()
+   end
+end
+
+function filler.fillDown(width, length, height, block_selector, ...)
+   local mark = rob.checkpoint()
+   
+   for z = height,0,-1 do
+      filler.floor(width, length, block_selector, z, height, ...)
+      rob.down()
+   end
+end
 
 return filler

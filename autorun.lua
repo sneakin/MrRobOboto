@@ -8,5 +8,4 @@ print("Added " .. path .. " to the search paths.")
 
 -- TODO let require("rob") set all this up
 rob = require("rob")
-rob.pathing = {}
-rob.pathing.areas = require("rob/pathing/areas")
+sneaky = require("sneaky/util")

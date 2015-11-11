@@ -6,6 +6,7 @@ local crobot = component.robot
 local sides = require("sides")
 local robot = require("robot")
 local nav = nil
+local checkpoints = require("rob/checkpoints")
 
 for kind, addr in pairs(component.list()) do
   if kind == "navigation" then
@@ -13,7 +14,9 @@ for kind, addr in pairs(component.list()) do
   end
 end
 
-local rob = {}
+local rob = {
+   checkpoints = checkpoints:new()
+}
 
 function rob.navigation()
    return nav
@@ -23,18 +26,41 @@ function rob.hasNavigation()
    return not (nav == nil)
 end
 
+function rob.checkpoint()
+   return rob.checkpoints:getMark()
+end
+
+function rob.replace_from(mark, func)
+   rob.checkpoints:replaceFrom(mark, func)
+end
+
+function rob.rollback()
+   rob.checkpoints:rollback()
+   return rob
+end
+
+function rob.rollback_to(mark)
+   rob.checkpoints:rollback_to(mark)
+   return rob
+end
+
+function rob.rollback_all()
+   rob.checkpoints:rollback_all()
+   return rob
+end
+
+function rob.pop_to(mark)
+   rob.checkpoints:pop_to(mark)
+   return rob
+end
+
 --
 -- Motion procedures
 --
 
 function rob.moveBy(dir, blocks)
-   for i = 1, (blocks or 1) do
-      if not crobot.move(dir) then
-         return false, i-1
-      end
-   end
-
-   return true, (blocks or 1)
+   rob.checkpoints:move_by(dir, blocks)
+   return rob
 end
 
 local dir_procs = {
@@ -45,15 +71,19 @@ local dir_procs = {
 }
 for name, dir in pairs(dir_procs) do
    rob[name] = function(n)
-      return rob.moveBy(sides[dir], n)
+      rob.checkpoints:move_by(sides[dir], n)
+      return rob
    end
 
    rob[dir] = rob[name]
 end
 
 function rob.bottomOut()
-   rob.downBy(256)
-   return true
+   while not crobot.detect(sides.down) do
+      rob.down()
+   end
+   
+   return rob
 end
 
 function rob.face(dir)
@@ -63,7 +93,7 @@ function rob.face(dir)
 
   local face = nav.getFacing()
   repeat
-    robot.turnLeft()
+    rob.turn()
     face = nav.getFacing()
     print("Facing", face, dir)
   until tonumber(face) == tonumber(dir)
@@ -72,19 +102,16 @@ function rob.face(dir)
 end
 
 function rob.turn(times)
-   times = times or 1
-   
-   for i = 1, math.abs(times) do
-      crobot.turn(times < 0)
-   end
+   rob.checkpoints:turn(times)
+   return rob
 end
 
 function rob.turnRight(times)
-   return rob.turn(-times)
+   return rob.turn(-(times or 1))
 end
 
 function rob.turnLeft(times)
-   return rob.turn(times)
+   return rob.turn(times or 1)
 end
 
 function rob.turnAround()
@@ -125,6 +152,19 @@ end
 function rob.notcool()
   rob.blink(0.5, 0xffff00)
 end
+
+--
+-- Actions
+--
+
+function rob.place(dir)
+   if not crobot.place(dir) then
+      error({"place", dir})
+   end
+   
+   return rob
+end
+
 
 --
 -- Utility procedures

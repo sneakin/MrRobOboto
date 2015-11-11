@@ -1,6 +1,6 @@
 local table = require("table")
 local sides = require("sides")
-local sneaky = require("sneaky-util")
+local sneaky = require("sneaky/util")
 local component = require("component")
 local inv = component.inventory_controller
 local robinv = require("rob/inventory")

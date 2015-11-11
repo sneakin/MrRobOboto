@@ -10,6 +10,10 @@ local inv = component.inventory_controller
 
 local inventory = {}
 
+function inventory.count(slot)
+   return crobot.count(slot)
+end
+
 function emptySlot(slot)
    crobot.select(slot)
    
@@ -23,7 +27,9 @@ function emptySlot(slot)
 end
 
 function inventory.emptySlot(slot)
-   local total_count = crobot.count(slot)
+   local stack = inv.getStackInInternalSlot(slot)
+   if not stack then return true end
+   local total_count = stack.size
    
    if emptySlot(slot) then
       local new_c = crobot.count(slot)
@@ -36,7 +42,7 @@ function inventory.emptySlot(slot)
          end
       end
 
-      print("Transfered " .. total_count .. " items from slot " .. slot)
+      print("Transfered " .. total_count .. " " .. stack.name .. " from slot " .. slot)
       return true, total_count
    end
 end
@@ -105,6 +111,15 @@ function inventory.searchInternal(item_pattern)
 end
 
 function inventory.findFirstInternal(item_pattern)
+   local slot = crobot.select()
+   local stack = inv.getStackInInternalSlot(slot)
+
+   if stack then
+      if string.find(search_value(slot, stack), item_pattern) then
+         return slot, stack
+      end
+   end
+   
    for slot, stack in inventory.searchInternal(item_pattern) do
       return slot, stack
    end
@@ -129,9 +144,27 @@ function inventory.selectFirst(item_pattern)
    return false
 end
 
+function inventory.findFirstFilledSlot()
+   for slot, stack in inventory.internal() do
+      if stack then
+         return slot
+      end
+   end
+
+   return nil
+end
+
+function inventory.selectFirstFilledSlot()
+   local slot = inventory.findFirstFilledSlot()
+   crobot.select(slot)
+   return slot
+end
+
 function inventory.equipFirst(item_pattern)
    local slot, stack = inventory.findFirstInternal(item_pattern)
-   if slot and inventory.equip(slot) then
+   if slot then
+      crobot.select(slot)
+      inventory.equip()
       return slot
    end
 
@@ -142,6 +175,17 @@ function inventory.equip(slot)
    return inv.equip(slot)
 end
 
+function inventory.takeFromSlot(slot, number, dir)
+   if not dir then dir = sides.front end
+   if not number then number = 64 end
+   local c = inv.getSlotStackSize(dir, slot)
+   if inv.suckFromSlot(dir, slot, number) then
+      local new_c = inv.getSlotStackSize(dir, slot)
+      return c - new_c
+   else
+      return 0
+   end
+end
 
 function inventory.take(number, pattern, dir)
    if not dir then dir = sides.front end
@@ -149,15 +193,10 @@ function inventory.take(number, pattern, dir)
    local taken = 0
 
    for slot, stack in inventory.search(dir, pattern) do
-      local c = stack.size
-      if inv.suckFromSlot(dir, slot, number) then
-         local new_c = inv.getSlotStackSize(dir, slot)
-         local delta = c - new_c
+      local delta = inventory.takeFromSlot(slot, number, dir)
+      if delta <= 0 then
          number = number - delta
-
-         if number <= 0 then
-            break
-         end
+         break
       end
    end
 

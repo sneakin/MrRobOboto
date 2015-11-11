@@ -9,7 +9,7 @@ local inv = require("rob/inventory")
 
 local lumberjack = {}
 
-function clear_action(dir)
+function clear_action(checkpoints, dir)
    if crobot.detect(dir) then
       local good, why = crobot.swing(dir)
       if not good then
@@ -31,7 +31,7 @@ function clear_action(dir)
    return true
 end
 
-function return_action(dir, x, y, w, h, sapling_slot)
+function return_action(checkpoints, dir, x, y, w, h, sapling_slot, spacing)
    print("return_action",x,y,w,h,sapling_slot)
    crobot.suck(sides.down)
 
@@ -44,8 +44,8 @@ function return_action(dir, x, y, w, h, sapling_slot)
       if robot.count(sapling_slot) > 0 then
          crobot.select(sapling_slot)
 
-         if x % 4 == 0 then
-            if y % 4 == 0 then
+         if x % spacing == 0 then
+            if y % spacing == 0 then
                crobot.place(sides.forward)
             end
          end
@@ -55,36 +55,23 @@ function return_action(dir, x, y, w, h, sapling_slot)
    return true
 end
 
-function lumberjack.clear(width, length)
-   print("Lumberjacking " .. width .. "x" .. length)
+function lumberjack.clear(width, length, spacing)
+   spacing = spacing or 4
+   print("Lumberjacking " .. width .. "x" .. length .. " " .. spacing)
 
-   local good, retdata = areas.square(width, length, clear_action)
-   if good then
-      -- local good, retdata = planter.plant(width, length)
-      print("Planting saplings")
-      local sapling_slot = inv.selectFirst("sapling")
-      --local planter_good, planter_retdata = planter.plant(width, length)
+   local mark = rob.checkpoint()
 
-      
-      local good, retdata = areas.squareBack(width, length, number.odd(length), return_action, sapling_slot)
-      print("Saplings were", good, table.unpack(retdata))
-      if good then
-         return true
-      else
-         rob.turn()
-         local x, y, dir = table.unpack(retdata)
-         local good, retdata = areas.backToStart(1 + width - x, length - y, sides.back, number.even(length))
-         return false, retdata[1], retdata[2]
-      end
-   else
-      print("Return back")
-      local good, retdata = areas.backToStart(table.unpack(retdata))
-      if good then
-         return false
-      else
-         return false, retdata
-      end
-   end
+   inv.selectFirst("_axe")
+   areas.square(width, length, clear_action)
+
+   -- local good, retdata = planter.plant(width, length)
+   print("Planting saplings")
+   local sapling_slot = inv.selectFirst("sapling")
+   --local planter_good, planter_retdata = planter.plant(width, length)
+
+   areas.square_back(width, length, number.odd(length), return_action, sapling_slot, spacing)
+
+   rob.pop_to(mark)
 end
 
 

@@ -1,132 +1,170 @@
+local serialization = require("serialization")
 local sides = require("sides")
 local clear = require("rob/clear")
 local rob = require("rob")
 local crafter = require("rob/crafter")
 local robinv = require("rob/inventory")
+local filler = require("rob/filler")
 
 local hq = {}
 
-function hq.new(rob)
-   local self = {
+function hq:new(rob)
+   local s = {
       rob = rob,
       level_height = 6,
       room_height = 3,
       room_size = 6
    }
 
-   function self.clearSurface()
-      robinv.equipFirst("axe")
+   setmetatable(s, self)
+   self.__index = self
 
-      for dir = 1, 4 do
-         local good, retdata = clear.volumeUp(8, 8, 20)
-         rob.turn(-1)
-         rob.forward()
-      end
+   return s
+end
 
-      return true
+function hq:clearSurface(size)
+   robinv.equipFirst("_axe")
+
+   for dir = 1, 4 do
+      local mark = self.rob.checkpoint()
+      clear.area(size or 8, size or 8)
+      self.rob.rollback_to(mark)
+      self.rob.turn(-1)
+      self.rob.forward()
    end
 
-   function self.digShaft(levels)
-      rob.turn(-2)
+   return true
+end
 
-      local good, depth = clear.volumeDown(2, 2, self.level_height * levels)
-      if good then
-         rob.bottomOut()
-         rob.turn(-2)
-         return true, depth
-      else
-         return false, depth
-      end
+function hq:digShaft()
+   self.rob.turn(-2)
+   self.rob.bottomOut()
+
+   local good, err = pcall(clear.volumeDown, 2, 2, 256)
+   if err.reason == "solid" then
+      return true -- todo determine dig depth
+   else
+      error(err)
    end
+   --self.rob.bottomOut()
+   --self.rob.turn(-2)
+end
 
-   function self.digLevel(rooms_todo, rooms_done)
-      for room = math.min((rooms_done or 1), 4), math.min(rooms_todo, 4) do
-         rob.swing(sides.forward)
-         rob.forward()
-         rob.swing(sides.up)
-         
-         if clear.volumeUp(self.room_size, self.room_size, self.room_height) then
-            rob.back()
-            rob.turn(-1)
-            rob.forward()
-         else
-            rob.forward()
-            return false
-         end
-      end
+function hq:digLevel(rooms_todo, rooms_done)
+   for room = math.min((rooms_done or 1), 4), math.min(rooms_todo, 4) do
+      local mark = self.rob.checkpoint()
 
-      return true
+      self.rob.swing(sides.forward)
+      self.rob.forward()
+      self.rob.swing(sides.up)
+
+      clear.volumeUp(self.room_size, self.room_size, self.room_height)
+      self.rob.rollback_to(mark)
+
+      self.rob.turnRight()
+      self.rob.forward()
    end
+end
 
-   function self.buildChargingRoom(level, room)
-   end
+function hq:buildChargingRoom(level, room)
+end
 
-   function self.setCharger(level, room, charger)
-   end
+function hq:setCharger(level, room, charger)
+end
 
-   function charge()
+function charge()
+end
+
+function hq:equipPick()
+   if not robinv.equipFirst("pickaxe") then
+      crafter.craft(5, "planks")
+      crafter.craft(2, "sticks")
+      crafter.craft(1, "wooden_pickaxe")
+      robinv.equipFirst("pickaxe")
    end
+end
+
+function hq:digTunnel()
+   self.rob.turnRight().forward().turnLeft()
+   clear.volumeUp(8, 2, 3)
+end
+
+function hq:digTunnels()
+   local mark = self.rob.checkpoint()
    
-   function self.setup2()
-      -- clear the land
-      local good = self.clearSurface()
+   for n = 1,4 do
+      self:digTunnel()
+      self.rob.down(2).turnRight()
+   end
+end
 
-      if good then
-         -- dig out a level of the shaft
-         if not robinv.equipFirst("pickaxe") then
-            crafter.craft(5, "planks")
-            crafter.craft(2, "sticks")
-            crafter.craft(1, "wooden_pickaxe")
-            robinv.equipFirst("pickaxe")
-         end
-         
-         local good, depth = self.digShaft(1)
-         if good then
-            -- dig out the initial level's initial room
-            local good = self.digLevel(1)
-            if good then
-               -- place charger and generator
-               local good = self.buildChargingRoom(1, 1)
-               if good then
-                  -- charge
-                  self.setCharger(1, 1, 1)
-                  return self.charge()
-               end
-            end
+function hq:fillTunnels()
+   self.rob.turnRight().forward().turnLeft()
+
+   for n = 1, 4 do
+      filler.floor(7, 2)
+      self.rob.turnAround().forward().turnLeft()
+   end
+end
+
+function hq:buildFoundation()
+   local tries = 1
+
+   local mark = self.rob.checkpoint()
+   local z_mark = mark
+   
+   repeat
+      local good, err = pcall(self.digTunnels, self)
+      if not good then
+         if err.reason == "solid" then
+            self.rob.rollback_to(z_mark)
+            self.rob.up()
+            z_mark = self.rob.checkpoint()
+            tries = tries + 1
          else
-            rob.up(depth)
+            error(err)
          end
       end
+   until good or tries > 16
 
-      return false
-   end
+   if tries > 16 then error("failed") end
 
-   function self.equipPick()
-      if not robinv.equipFirst("pickaxe") then
-         crafter.craft(5, "planks")
-         crafter.craft(2, "sticks")
-         crafter.craft(1, "wooden_pickaxe")
-         robinv.equipFirst("pickaxe")
-      end
-   end
+   self.foundation_level = tries
 
-   function self.setup()
-      -- clear the land
-      self.clearSurface()
+   self.rob.rollback_to(z_mark)
 
-      -- dig out a level of the shaft
-      self.equipPick()
-      self.digShaft(1)
-      -- dig out the initial level's initial room
-      self.digLevel(1)
-      -- place charger and generator
-      self.buildChargingRoom(1, 1)
-      -- charge
-      self.setCharger(1, 1, 1)
-      self.charge()
-   end
+   -- todo fill foundation
+   self:fillTunnels()
+   
+   return self.foundation_level
+end
 
-   return self
+function hq:setup()
+   local mark = self.rob.checkpoints:getMark()
+
+   -- determine surface height?
+   -- clear the land
+   -- local good, err = pcall(self.clearSurface, self)
+   -- self.rob.checkpoints:rollback_to(mark)
+
+   -- dig out the shaft
+   robinv.equipFirst("pickaxe")
+   local good, err = pcall(self.digShaft, self)
+   -- local depth = err[2]
+   print(good, serialization.serialize(err))
+
+   -- determine bedrock max height
+   hq:determineBedrockLevel()
+   
+   -- dig out the initial level's initial room
+   hq:digLevel(1)
+   -- place charger and generator
+   hq:buildChargingRoom(1, 1)
+   -- charge
+   -- hq:setCharger(1, 1, 1)
+   --hq:charge()
+
+return self
 end
 
 
