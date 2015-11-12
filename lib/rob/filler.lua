@@ -67,6 +67,44 @@ function fill_action_3d(points, dir, x, y, w, l, z, h, block_selector)
    return true
 end
 
+function return_func(points, x, y, width, length, turn_right)
+   print("Floor return", x, y, width, length, turn_right)
+
+   if turn_right then
+      if number.odd(y) then
+         points:
+            turnRight():
+            forward(length - y):
+            turnRight():
+            forward(x - 2):
+            turn(2)
+      else
+         points:
+            turnLeft():
+            forward(y + 1):
+            turnRight():
+            forward(x):
+            turn(2)
+      end
+   else
+      if number.odd(y) then
+         points:
+            turnLeft():
+            forward(length - y):
+            turnRight():
+            forward(x):
+            turn(2)
+      else
+         points:
+            turnRight():
+            forward(length - y):
+            turnRight():
+            forward(x - 2):
+            turn(2)
+      end
+   end
+end
+
 function filler.floor(width, length, block_selector, ...)
    block_selector = block_selector or select_block
    local mark = rob.checkpoint()
@@ -74,8 +112,9 @@ function filler.floor(width, length, block_selector, ...)
    block_selector(1, 1, width, length, ...)
    
    rob.forward()
+   local area_mark = rob.checkpoint()
    areas.move_to_end(rob.checkpoints, width, length)
-   areas.square_back(width, length, number.odd(length), fill_action_floor, block_selector, ...)
+   areas.square_back_inner(rob.checkpoints, width, length, number.odd(length), fill_action_floor, return_func, area_mark, block_selector, ...)
    areas.moveThenAct(rob.checkpoints, fill_action_floor, sides.back, 1, length, width, length, block_selector, ...)
    rob.pop_to(mark)
 end

@@ -1,3 +1,4 @@
+local sneaky= require("sneaky/util")
 local filler = require("rob/filler")
 local inv = require("rob/inventory")
 
@@ -111,7 +112,7 @@ function selector(x, y, w, l, z, h, blocks, ...)
 end
 
 function glass.build(width, length, level_height, levels, blocks)
-   blocks = sneaky.merge(default_blocks, blocks)
+   blocks = sneaky.merge(glass.default_blocks, blocks)
    for level = 1, levels do
       filler.fillUp(width, length, level_height, selector, blocks)
    end

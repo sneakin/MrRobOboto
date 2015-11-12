@@ -1,3 +1,4 @@
+local computer = require("computer")
 local sides = require("sides")
 local robot = require("robot")
 local component = require("component")
@@ -10,9 +11,14 @@ local clear = {}
 
 function clear.action(points, dir)
    local times = 1
-   while crobot.detect(dir) and times < 256 do
+   while crobot.detect(dir) and times < 16 do
+      times = times + 1
+      
       local good, why = crobot.swing(dir)
-      if not good then
+      if why == "entity" then
+         print(why)
+         computer.beep(440, 3)
+      elseif not good then
          if not (why == "air") then
             print(why)
             return false
@@ -23,7 +29,7 @@ function clear.action(points, dir)
    crobot.suck(sides.forward)
    crobot.suck(sides.down)
 
-   return times < 256
+   return times < 16
 end
 
 function clear.area(width, length)

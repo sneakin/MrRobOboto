@@ -122,46 +122,44 @@ function areas.square(width, length, action, ...)
    return areas.square_p(rob.checkpoints, width, length, action, ...)
 end
 
-function areas.return_back_func(points, width, length, turn_right)
-   local turn_cond = number.even
-   if turn_right then turn_cond = number.odd end
-
-   if turn_cond(length) then
-      if turn_right then
+function areas.return_back_func(points, x, y, width, length, turn_right)
+   print(x, y, width, length, turn_right)
+   if turn_right then
+      if number.odd(y) then
          points:
             turnLeft():
-            forward(length - 1):
+            forward(y - 1):
             turnRight():
-            forward(width - 1)
+            forward(width - x + 1)
       else
          points:
-            turnLeft():
-            forward(length - 1):
-            turnLeft()
+            turnRight():
+            forward(y - 1):
+            turnRight():
+            forward(width - x - 1)
       end
    else
-      if turn_right then
+      if number.odd(y) then
          points:
             turnRight():
-            forward(length - 1):
-            turnRight()
+            forward(y - 1):
+            turnLeft():
+            forward(x)
       else
          points:
-            turnRight():
-            forward(length - 1):
             turnLeft():
-            forward(width - 1)
+            forward(y - 1):
+            turnLeft():
+            forward(x - 2)
       end
    end
 end
 
-function areas.square_back_inner(points, width, length, turn_right, action, ...)
+function areas.square_back_inner(points, width, length, turn_right, action, return_func, mark, ...)
    local rx, ry = 1, 1
    local turn_cond = number.even
    if turn_right then turn_cond = number.odd end
 
-   local mark = points:getMark()
-   
    for y = 1,length do
       ry = y
       print("Plane progress " .. ry .. "/" .. length)
@@ -175,9 +173,8 @@ function areas.square_back_inner(points, width, length, turn_right, action, ...)
          end
          
          areas.moveThenAct(points, action, sides.back, rx, ry, width, length, ...)
+         points:replaceFrom(mark, return_func, rx, ry, width, length, turn_right)
       end
-
-      points:replaceFrom(mark, areas.return_back_func, width, y, turn_right)
 
       if y == length then break end
 
@@ -208,7 +205,12 @@ end
 function areas.square_back_p(points, width, length, turn_right, action, ...)
    rob.busy()
    
-   local ret = areas.square_back_inner(points, width, length, turn_right, action or areas.debugAction, ...)
+   local ret = areas.
+      square_back_inner(points, width, length, turn_right,
+                        action or areas.debugAction,
+                        areas.return_back_func,
+                        points:getMark(),
+                        ...)
 
    rob.cool()
 
@@ -216,7 +218,7 @@ function areas.square_back_p(points, width, length, turn_right, action, ...)
 end
 
 function areas.square_back(width, length, turn_right, action, ...)
-   return areas.square_back_p(rob.checkpoints, width, length, turn_right, action, ...)
+   return areas.square_back_p(rob.checkpoints, width, length, turn_right, ...)
 end
 
 

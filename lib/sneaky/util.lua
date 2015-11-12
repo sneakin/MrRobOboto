@@ -1,6 +1,18 @@
 local table = require("table")
 local sneaky = {}
 
+function sneaky.print_error(err, trace)
+   print(err)
+   if type(err) == "table" then
+      for k,v in pairs(err) do
+         print(k, v)
+      end
+   end
+   if trace then
+      print(trace)
+   end
+end
+
 function sneaky.copy(src)
    local dest = {}
 
@@ -182,10 +194,13 @@ end
 
 function sneaky.merge(a, b)
    local tbl = sneaky.copy(a)
-   for k,v in pairs(b) do
-      tbl[k] = v
-   end
 
+   if b then
+      for k,v in pairs(b) do
+         tbl[k] = v
+      end
+   end
+   
    return tbl
 end
 

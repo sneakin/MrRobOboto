@@ -3,6 +3,7 @@ local sneaky = require("sneaky/util")
 local serialization = require("serialization")
 local sides = require("sides")
 local component = require("component")
+local computer = component.computer
 local robot = component.robot
 
 local CheckPointError = {}
@@ -105,13 +106,7 @@ function cp:rollback(n)
             -- print("Rolling back with ", func, table.unpack(c))
             local good, err = pcall(func, err_roll_back, table.unpack(c))
             if err then
-               print(err)
-
-               if type(err) == "string" then
-                  for k,v in pairs(err) do
-                     print(k, v)
-                  end
-               end
+               sneaky.print_error(err)
             end
             
             if not good then
@@ -130,9 +125,31 @@ function cp:rollback_to(mark)
    return self:rollback(#self.points - mark)
 end
 
-function cp:rollback_all()
+function cp:try_rollback_all()
    while #self.points > 0 do
       self:rollback()
+   end
+
+   return self
+end
+
+function cp:rollback_all()
+   local times = 0
+   local good, err
+
+   repeat
+      times = times + 1
+      good, err = pcall(cp.try_rollback_all, self)
+      if not good and times <= 3 then
+         print("Trying again in 3 seconds.")
+         computer.beep(440, 3)
+      end
+   until good or times > 3
+   
+   if not good then
+      if times > 3 then
+         error(err)
+      end
    end
 
    return self
