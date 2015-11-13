@@ -205,7 +205,20 @@ function cp:turnRight(times)
 end
 
 function cp:move(dir)
-   local good, err = robot.move(dir)
+   local times = 0
+   local good, err
+   
+   repeat
+      times = times + 1
+      good, err = robot.move(dir)
+      if err == "entity" then
+         print("An entity is in the way.")
+         os.sleep(3)
+      elseif not good then
+         break
+      end
+   until good or times >= 6
+   
    if good then
       self:push(self.move, cp.flippedSides[dir])
       
