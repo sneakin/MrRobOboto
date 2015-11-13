@@ -71,7 +71,7 @@ function crafter.gatherIngredients(ingredients)
       print("gather", i, ingredient, number)
       local slot, stack = robinv.findFirstInternal(ingredient)
       if not slot then
-         if not robinv.take(number, ingredient) then
+         if robinv.take(number, ingredient) == 0 then
             return false, "need", ingredient, number
          end
 

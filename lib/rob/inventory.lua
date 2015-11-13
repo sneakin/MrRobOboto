@@ -2,6 +2,7 @@
 -- Inventory
 --
 
+local table = require("table")
 local sides = require("sides")
 local sneaky = require("sneaky/util")
 local component = require("component")
@@ -110,6 +111,22 @@ function inventory.searchInternal(item_pattern)
    return sneaky.search(inventory.internal(), item_pattern, search_value)
 end
 
+function inventory.count(side, item_pattern)
+   local n = 0
+   for slot, stack in inventory.search(side, item_pattern) do
+      n = n + stack.size
+   end
+   return n
+end
+
+function inventory.countInternal(item_pattern)
+   local n = 0
+   for slot, stack in inventory.searchInternal(item_pattern) do
+      n = n + stack.size
+   end
+   return n
+end
+
 function inventory.findFirstInternal(item_pattern)
    local slot = crobot.select()
    local stack = inv.getStackInInternalSlot(slot)
@@ -194,13 +211,48 @@ function inventory.take(number, pattern, dir)
 
    for slot, stack in inventory.search(dir, pattern) do
       local delta = inventory.takeFromSlot(slot, number, dir)
+      
       if delta <= 0 then
          number = number - delta
          break
       end
+      
+      taken = taken + delta
+      if taken >= number then
+         break
+      end
    end
 
-   return taken == number
+   return taken
+end
+
+function inventory.needList(list)
+   local need = {}
+   
+   for item, number in pairs(list) do
+      local n = inventory.countInternal(item)
+      if n < number then
+         need[item] = number - n
+      end
+   end
+
+   return need
+end
+
+function inventory.takeList(list, dir)
+   local need = {}
+   local good = true
+   
+   for item, number in pairs(list) do
+      print("Taking " .. number .. " " .. item)
+      local n = inventory.take(number, item, dir or sides.front)
+      if not (n == number) then
+         table.insert(need, {item, number - n})
+         good = false
+      end
+   end
+
+   return good, need
 end
 
 ----------------
