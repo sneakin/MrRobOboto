@@ -11,7 +11,7 @@ local clear = {}
 
 function clear.action(points, dir)
    local times = 1
-   while crobot.detect(dir) and times < 16 do
+   while crobot.detect(dir) and times < 5 do
       times = times + 1
       
       local good, why = crobot.swing(dir)
