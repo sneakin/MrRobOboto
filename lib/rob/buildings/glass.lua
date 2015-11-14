@@ -178,7 +178,9 @@ function roof_selector(x, y, w, l, blocks, ...)
    then
       inv.selectFirst(blocks.outer_wall)
    elseif cable_conduit(x, y, w, l) then
-      inv.selectFirst("lamp")
+      local lamps = { blocks.lamp_q1, blocks.lamp_q2, blocks.lamp_q3, blocks.lamp_q4 }
+      local quad = quadrant_for(x, y, w, l)
+      inv.selectFirst(lamps[quad] or blocks.roof)
    else
       inv.selectFirst(blocks.roof)
    end
