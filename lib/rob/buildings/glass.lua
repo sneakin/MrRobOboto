@@ -131,8 +131,6 @@ function glass.selector(x, y, w, l, z, h, blocks, ...)
          or y == 1 or y == l
       then
          inv.selectFirst(blocks.outer_wall)
-      elseif ladder_wall(x, y, z, w, l, h) then
-         return false
       elseif cable_conduit(x, y, w, l) then
          inv.selectFirst(cable_for(x, y, w, l, blocks))
       elseif z == 1 then
