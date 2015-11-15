@@ -13,6 +13,18 @@ function sneaky.print_error(err, trace)
    end
 end
 
+function sneaky.subtable(tbl, i, n)
+   if #tbl > n then
+      local r = {}
+      for x = 1, n do
+         r[x] = tbl[i + x]
+      end
+      return r
+   else
+      return tbl
+   end
+end
+
 function sneaky.copy(src)
    local dest = {}
 
@@ -23,6 +35,12 @@ function sneaky.copy(src)
    end
    
    return dest
+end
+
+function sneaky.append(tbl, more)
+   local new_tbl = sneaky.copy(tbl)
+   table.insert(new_tbl, more)
+   return new_tbl
 end
 
 function sneaky.class(klass, initial_state)
@@ -143,6 +161,46 @@ function sneaky.search(iter, item_pattern, value_function)
    end
 
    return myiter
+end
+
+function sneaky.find(tbl, func)
+   local ret = {}
+   for k, v in pairs(tbl) do
+      if func(k,v) then
+         ret[k] = v
+      end
+   end
+   return ret
+end
+
+function sneaky.ifind(tbl, func)
+   local ret = {}
+   for i, v in ipairs(tbl) do
+      if func(k,v) then
+         table.insert(ret, v)
+      end
+   end
+   return ret
+end
+
+function sneaky.findFirst(tbl, func)
+   for k, v in pairs(tbl) do
+      if func(k, v) then
+         return k, v
+      end
+   end
+
+   return nil
+end
+
+function sneaky.min(tbl, func)
+   local m = tbl[1]
+   for i, v in ipairs(tbl) do
+      if func(v, m) then
+         m = v
+      end
+   end
+   return m
 end
 
 function sneaky.mapIter(tbl, func)
