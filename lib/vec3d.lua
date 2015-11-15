@@ -1,8 +1,21 @@
+local math = require("math")
 local string = require("string")
 local vec3d = {}
 
 function vec3d:__tostring()
    return string.format("<%f, %f, %f>", self.x, self.y, self.z)
+end
+
+function vec3d:__add(other)
+   return vec3d:new(self.x + other.x, self.y + other.y, self.z + other.z)
+end
+
+function vec3d:__sub(other)
+   return vec3d:new(self.x - other.x, self.y - other.y, self.z - other.z)
+end
+
+function vec3d:__mul(other)
+   return vec3d:new(self.x * other.x, self.y * other.y, self.z * other.z)
 end
 
 function vec3d:new(...)
@@ -35,5 +48,14 @@ function vec3d:set(...)
 
    return self
 end
+
+function vec3d:length_squared()
+   return self.x * self.x + self.y * self.y + self.z * self.z
+end
+
+function vec3d:length()
+   return math.sqrt(self:length_squared())
+end
+
 
 return vec3d
