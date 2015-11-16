@@ -50,6 +50,20 @@ function sneaky.class(klass, initial_state)
    return v
 end
 
+function sneaky.table(default)
+   local default_func
+
+   if type(default) == "function" then
+      default_func = default
+   else
+      default_func = function() return default end
+   end
+   
+   local t = {}
+   setmetatable(t, { __index = default_func })
+   return t
+end
+
 function sneaky.reverse(tbl)
   local ret = {}
   for k,v in ipairs(tbl) do
@@ -193,14 +207,25 @@ function sneaky.findFirst(tbl, func)
    return nil
 end
 
+function sneaky.findFirstValue(tbl, value)
+   return sneaky.findFirst(tbl, function(k, v) return v == value end)
+end
+
 function sneaky.min(tbl, func)
-   local m = tbl[1]
-   for i, v in ipairs(tbl) do
-      if func(v, m) then
-         m = v
+   if #tbl > 0 then
+      local mv = tbl[1]
+      local mi = 1
+      
+      for i, v in pairs(tbl) do
+         if func(v, mv) then
+            mv = v
+            mi = i
+         end
       end
+      return mi, mv
+   else
+      return nil
    end
-   return m
 end
 
 function sneaky.mapIter(tbl, func)
