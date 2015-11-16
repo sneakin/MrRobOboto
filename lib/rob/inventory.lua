@@ -11,10 +11,6 @@ local inv = component.inventory_controller
 
 local inventory = {}
 
-function inventory.count(slot)
-   return crobot.count(slot)
-end
-
 function emptySlot(slot)
    crobot.select(slot)
    
@@ -117,6 +113,10 @@ function inventory.count(side, item_pattern)
       n = n + stack.size
    end
    return n
+end
+
+function inventory.countInternalSlot(slot)
+   return crobot.count(slot)
 end
 
 function inventory.countInternal(item_pattern)

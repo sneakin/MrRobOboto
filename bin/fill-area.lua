@@ -1,3 +1,4 @@
+local sneaky = require("sneaky/util")
 local number = require("sneaky/number")
 local filler = require("rob/filler")
 local rob = require("rob")
@@ -11,7 +12,7 @@ local pattern = args[4]
 local pattern_args = {}
 
 local pattern_func = function(x, y, w, h, z, h)
-   if robinv.count() <= 0 then
+   if robinv.countInternalSlot() <= 0 then
       assert(robinv.selectFirst(item), "no item")
    end
 
@@ -50,11 +51,5 @@ if good then
    print("Success!")
 else
    print("Failed.")
-   print(err)
-   for k,v in pairs(err) do
-      print(k, v)
-   end
-   if debug and debug.traceback() then
-      print(debug.traceback())
-   end
+   sneaky.print_error(err, debug.traceback())
 end
