@@ -4,18 +4,6 @@ local vec3d = require("vec3d")
 local sneaky = require("sneaky/util")
 local table = require("table")
 
-local pqueue = {}
-
-function pqueue:new()
-   return sneaky.class(self, {})
-end
-
-function pqueue:push(item, priority)
-end
-
-function pqueue:pop()
-end
-
 local router = {}
 
 function router:new()
@@ -52,6 +40,12 @@ function router:find_paths(node)
    end)
 end
 
+function router:find_path(from, to)
+   return sneaky.findFirst(self.paths, function(_, path)
+                              return path.from == from and path.to == to
+   end)
+end
+
 function router:find_paths_from(node)
    return sneaky.ifind(self.paths, function(_, path)
                           return path.from == node
@@ -65,86 +59,76 @@ function router:weight(path, to)
    return path.weight * (t - f):length()
 end
 
-function router:weighted_paths(from, to)
-   local paths = self:find_paths_from(from)
+function router:distance_between(a, b)
+   local f = assert(self.nodes[a], "node not found: " .. a)
+   local t = assert(self.nodes[b], "node not found: " .. b)
 
-   table.sort(paths, function(a, b)
-                 return (a.cost + self:weight(a, to)) < (b.cost + self:weight(b, to))
-   end)
-
-   -- for i, v in ipairs(paths) do
-   --    print(from, to, i, v.from, self:weight(v, to), self:weight(v, to))
-   -- end
-
-   return sneaky.subtable(paths, 1, 5)
-end
-
-function router:seen(node, accum)
-   return sneaky.findFirst(accum, function(_, p)
-                              return node == p.to or node == p.from
-   end)
-end
-
-function router:cost(route)
-   local c = 0
-   for i, p in ipairs(route) do
-      c = c + p.cost
-   end
-   return c
+   return (t - f):length()
 end
 
 function diacomment(s, ...)
    if DEBUG then
-      io.stderr:write("// " .. s .. table.concat({...}, "\t") .. "\n")
+      io.stderr:write("// " .. s .. "\t" .. table.concat({...}, "\t") .. "\n")
    end
 end
 
-function router:route(from, to, accum, tried_paths)
-   if not accum then
-      accum = {}
-   end
-
-   if not tried_paths then
-      tried_paths = {}
-   end
-
+function router:route(from, to, f_score, g_score)
    diacomment("route", from, to)
-   diacomment("  accum")
-   for i, p in ipairs(accum) do
-      diacomment("     ", i, p.from, p.to)
+
+   local open = { from }
+   local closed = {}
+   local came_from = {}
+
+   if not g_score then
+      g_score = sneaky.table(math.huge)
+      g_score[from] = 0
+   end
+
+   if not f_score then
+      f_score = sneaky.table(math.huge)
+      f_score[from] = self:distance_between(from, to)
    end
    
-   local paths = self:weighted_paths(from, to)
-   local routes = {}
-   
-   diacomment("  paths")
-   for i, path in ipairs(paths) do
-      diacomment("    path", i, path.from .. "->" .. path.to, self:weight(path, to))
-      if path.to == to then
-         print("//      BINGO")
-         table.insert(routes, sneaky.append(accum, path))
-         --break
-      elseif not self:seen(path.to, accum) --and
-      --not sneaky.findFirst(tried_paths, function(_, p) return p.to == path.to and p.from == path.from end)
-      then
-         local r
-         r = self:route(path.to, to, sneaky.append(accum, path), tried_paths)
-         if r then
-            table.insert(routes, r)
-            --break
-         end
+   while #open > 0 do
+      local i, current = sneaky.min(open, function(a, b) return f_score[a] < f_score[b] end)
+      if current == to then
+         return self:reconstruct_path(came_from, to), f_score, g_score
       end
 
-      table.insert(tried_paths, path)
+      diacomment("Trying " .. current)
+
+      table.remove(open, i)
+      table.insert(closed, current)
+
+      local edges = self:find_paths_from(current)
+      for _, edge in ipairs(edges) do
+         if not sneaky.findFirstValue(closed, edge.to) then
+            local score = g_score[current] + edge.cost
+            if not sneaky.findFirstValue(open, edge.to) then
+               diacomment("Queuing " .. edge.to)
+               table.insert(open, edge.to)
+            end
+
+            if score < g_score[edge.to] then
+               came_from[edge.to] = current
+               g_score[edge.to] = score
+               f_score[edge.to] = g_score[edge.to] + self:distance_between(edge.to, to) * edge.weight
+            end
+         end
+      end
    end
-   
-   if #routes == 0 then
-      return nil
-   else
-      return sneaky.min(routes, function(a, b)
-                           return self:cost(a) < self:cost(b)
-      end)
+end
+
+function router:reconstruct_path(came_from, current)
+   local route = {}
+
+   while came_from[current] do
+      local i, path = self:find_path(came_from[current], current)
+      current = came_from[current]
+      table.insert(route, path)
    end
+
+   return sneaky.reverse(route)
 end
 
 -----
@@ -211,8 +195,9 @@ function router_test.big_populate(rows, cols)
    return r
 end
 
-function router_test.dump_graph(r, from, to, highlighted_path)
+function router_test.dump_graph(r, from, to, highlighted_path, f_score, g_score)
    print("digraph router_test {")
+   print("  overlap=false;")
    
    for name, position in pairs(r.nodes) do
       local attrs = "label=\"" .. name .. " " .. position:__tostring() .. "\""
@@ -220,17 +205,20 @@ function router_test.dump_graph(r, from, to, highlighted_path)
          attrs = attrs .. ",color=\"#ffcccc\",style=filled,rank=1"
       elseif name == to then
          attrs = attrs .. ",color=\"#ccccff\",style=filled,rank=1000"
+      elseif sneaky.findFirst(highlighted_path, function(k,v) return v.to == name or v.from == name end) then
+         attrs = attrs .. ",color=\"#ccffcc\",style=filled"
       end
       print("  \"" .. name .. "\"[" .. attrs .. "];")
    end
 
    for i, path in ipairs(r.paths) do
-      local attrs = "label=\"" .. path.cost .. "\n" .. math.floor(r:weight(path, to)) .. "\""
+      --local attrs = "label=\"" .. path.cost .. "\n" .. math.floor(r:distance_between(path.to, to)) .. "\""
+      local attrs = "label=\"" .. math.floor(f_score[path.to]) .. "\n" .. math.floor(g_score[path.to]) .. "\""
       if highlighted_path and sneaky.findFirst(highlighted_path, function(_, p)
                                                   return (p.from == path.from and p.to == path.to)
                                               end)
       then
-         attrs = attrs .. ",color=\"red\""
+         attrs = attrs .. ",color=\"red\",style=bold"
       end
       print("  \"" .. path.from .. "\" -> \"" .. path.to .. "\"[" .. attrs .. "];")
    end
@@ -238,24 +226,26 @@ function router_test.dump_graph(r, from, to, highlighted_path)
    print("}")
 end
 
+function router_test.print_route(path)
+   if #path > 0 then
+      diacomment("Route:")
+      for i, edge in ipairs(path) do
+         diacomment(i, edge.from, edge.to)
+      end
+   else
+      diacomment("No route found.")
+   end
+end
+
 function router_test.run(r, from, to)
-   local path = r:route(from, to)
-   router_test.dump_graph(r, from, to, path)
+   local path, f_score, g_score = r:route(from, to)
+   router_test.dump_graph(r, from, to, path, f_score, g_score)
+   router_test.print_route(path)
 end
 
 function router_test.run1()
-   diacomment("routing charger to machines")
    local r = router_test.populate()
-   local path = r:route("charger", "machines")
-   if path then
-      diacomment("Route:")
-      for i, n in ipairs(path) do
-         diacomment("", i, n.from, n.to)
-      end
-   else
-      diacomment("no path")
-   end
-   router_test.dump_graph(r, "charger", "machines", path)
+   router_test.run(r, "charger", "machines")
 end
 
 function router_test.run2()
@@ -263,19 +253,12 @@ function router_test.run2()
    router_test.run(r, "charger", "mine")
 end
 
-function router_test.run3(x, y)
-   local r = router_test.big_populate(x or 4, y or 4)
-   router_test.run(r, "building-1:charger", "building-9:machines")
-end
-
-function router_test.run4()
-   local r = router_test.big_populate(11,1)
-   router_test.run(r, "building-1:charger", "building-10:machines")
-end
-
-function router_test.run5()
-   local r = router_test.big_populate(6,4)
-   router_test.run(r, "building-1:charger", "building-20:machines")
+function router_test.run3(x, y, building)
+   x = x or 4
+   y = y or 4
+   building = building or (y / 2) * x + (x / 2)
+   local r = router_test.big_populate(x, y)
+   router_test.run(r, "building-1:charger", "building-" .. building .. ":machines")
 end
 
 router.test = router_test
