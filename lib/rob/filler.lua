@@ -132,11 +132,13 @@ function filler.fillUpConfined(width, length, height, block_selector)
    end)
 end
 
-function filler.fillUp(width, length, height, block_selector, ...)
+function filler.fillUp(width, length, height, initial_floor, block_selector, ...)
+   initial_floor = initial_floor or 1
    block_selector = block_selector or select_block
+   
    local mark = rob.checkpoint()
 
-   for z = 1,height do
+   for z = initial_floor,height do
       filler.floor(width, length, block_selector, z, height, ...)
       rob.up()
    end
