@@ -12,8 +12,8 @@ local routes = {
       { "building-2:zone-1:exit", v:new(237, 67, 135) },
       { "tunnel-1:north:entrance", v:new(220, 65, 115) },
       { "tunnel-1:north:exit", v:new(221, 65, 115) },
-      { "tunnel-1:south:entrance", v:new(221, 65, 315) },
-      { "tunnel-1:south:exit", v:new(220, 65, 315) },
+      { "tunnel-1:south:entrance", v:new(221, 65, 330) },
+      { "tunnel-1:south:exit", v:new(220, 65, 330) },
       { "street:building-3", v:new(204, 69, 105) },
       { "street:building-4", v:new(256, 67, 124) },
       { "mine-1:entrance", v:new(257, 69, 58) }
@@ -40,8 +40,13 @@ local routes = {
       -- tunnel
       { "street:building-1", sides.west, "tunnel-1:north:entrance", sides.east, { { "forward", 20 }, { "down", 2 } } },
       { "tunnel-1:north:exit", sides.east, "street:building-1", sides.west, { { "up", 2 }, { "forward", 19 } } },
-      { "tunnel-1:north:entrance", sides.south, "tunnel-1:south:exit", sides.north, { { "forward", 200 } } },
-      { "tunnel-1:south:entrance", sides.north, "tunnel-1:north:exit", sides.south, { { "forward", 200 } } }
+      { "tunnel-1:north:entrance", sides.south, "tunnel-1:south:exit", sides.north, { { "forward", 215 } } },
+      { "tunnel-1:south:entrance", sides.north, "tunnel-1:north:exit", sides.south, { { "forward", 215 } } },
+
+      -- south:building-1
+      { "tunnel-1:south:exit", sides.west, "south:building-1:cornerstone", sides.east, { { "forward", 8 } } },
+      { "tunnel-1:south:exit", sides.west, "south:building-1:entry", sides.east, { { "up", 1 }, { "forward", 4 }, { "turn", 1 }, { "forward", 7 }, { "turn", -1 }, { "forward", 4 } } },
+      { "south:building-1:exit", sides.east, "tunnel-1:south:entrance", sides.south, { { "forward", 4 }, { "turn", 1 }, { "forward", 7 }, { "turn", -1 }, { "forward", 5 }, { "turn", 1 }, { "forward", 1 }, { "down", 1 } } },
    },
    bipaths  = {
       { "street:building-1", sides.west, "mining-tower-1:entry", sides.west, { { "forward", 14}, { "turn", -1 }, { "forward", 56 }, { "turn", -1 }, { "forward", 26 } } },
@@ -96,6 +101,7 @@ building.routes(router, "building-2", v:new(232, 66, 126), sides.south, 16, 16, 
 building.routes(router, "building-3", v:new(196, 68, 110), sides.south, 20, 16, 8, 8)
 building.routes(router, "building-4", v:new(253, 66, 130), sides.south, 9, 9, 6, 8)
 building.routes(router, "mining-tower-1", v:new(252, 67, 63), sides.east, 10, 10, 6, 8)
+building.routes(router, "south:building-1", v:new(213, 65, 330), sides.west, 16, 16, 6, 2)
 
 for i, node in ipairs(routes.nodes) do
    router:add_node(table.unpack(node))
