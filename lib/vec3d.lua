@@ -14,8 +14,16 @@ function vec3d:__sub(other)
    return vec3d:new(self.x - other.x, self.y - other.y, self.z - other.z)
 end
 
+function vec3d:__unm()
+   return self * -1
+end
+
 function vec3d:__mul(other)
-   return vec3d:new(self.x * other.x, self.y * other.y, self.z * other.z)
+   if type(other) == "table" then
+      return vec3d:new(self.x * other.x, self.y * other.y, self.z * other.z)
+   else
+      return vec3d:new(self.x * other, self.y * other, self.z * other)
+   end
 end
 
 function vec3d:new(...)
