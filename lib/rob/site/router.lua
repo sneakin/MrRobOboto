@@ -5,7 +5,10 @@ local vec3d = require("vec3d")
 local sneaky = require("sneaky/util")
 local table = require("table")
 local flipped_sides = require("rob/flipped_sides")
-local serialization = require("serialization")
+local good, serialization = pcall(require, "serialization")
+if not good then
+   serialization = nil
+end
 
 local router = {}
 
