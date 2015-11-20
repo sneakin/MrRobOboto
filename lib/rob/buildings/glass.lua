@@ -235,7 +235,7 @@ function glass.build(width, length, level_height, levels, blocks, initial_floor)
    glass.build_ladder(width, length, level_height, levels, blocks)
 
    rob.rollback_to(mark)
-   if initial_floor == 1 then
+   if initial_floor == 0 then
       glass.build_door(length, level_height)
    end
 end
