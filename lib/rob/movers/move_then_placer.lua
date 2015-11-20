@@ -1,4 +1,5 @@
 local sides = require("sides")
+local flipped_sides = require("rob/flipped_sides")
 local cp = require("rob/checkpoints")
 
 local MoveThenPlacer = {
@@ -21,7 +22,7 @@ for _, dir in ipairs({ "back", "up", "down" }) do
    MoveThenPlacer[dir] = function(self, times, ...)
       for n = 1, (times or 1) do
          self.mover[dir](self.mover)
-         pcall(self.place, self, cp.flippedSides[sides[dir]], n, (times or 1), ...)
+         pcall(self.place, self, flipped_sides[sides[dir]], n, (times or 1), ...)
       end
       return self
    end

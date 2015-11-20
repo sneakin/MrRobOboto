@@ -32,7 +32,7 @@ function volumes.cubeUpInner(squarer, return_func, points, width, length, height
       return_func(points, width, length, number.odd(length))
 
       if rz < height then
-         areas.moveThenAct(points, action, sides.up, 1, 1, width, length, rz, height, ...)
+         areas.actThenMove(points, action, sides.up, 1, 1, width, length, rz, height, ...)
       end
 
       points:replaceFrom(mark, function(points)

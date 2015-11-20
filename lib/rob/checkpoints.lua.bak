@@ -1,0 +1,141 @@
+local sneaky = require("sneaky/util")
+local serialization = require("serialization")
+local sides = require("sides")
+local component = require("component")
+local robot = component.robot
+
+local cp = {
+   flippedSides = {
+      [ sides.front ] = sides.back,
+      [ sides.back ] = sides.front,
+      [ sides.up ] = sides.down,
+      [ sides.down ] = sides.up
+   }
+}
+
+local checkpoints = {}
+
+function cp.points()
+   return checkpoints
+end
+
+function cp.reset()
+   checkpoints = {}
+   coord_stack = {}
+   return cp
+end
+
+function cp.push(points, return_func, ...)
+   if return_func then
+      table.insert(points, {return_func, ...})
+      
+      return cp
+   end
+
+   return cp
+end
+
+function cp.replace(points, num, return_func, ...)
+   if return_func then
+      sneaky.remove(points, num)
+      cp.push(points, return_func, ...)
+   end
+
+   return cp
+end
+
+function cp.pop(points)
+   if not points then points = checkpoints end
+   
+   if #points > 0 then
+      local c = table.remove(points)
+      if #c > 0 then
+         local func = table.remove(c, 1)
+         local err_roll_back = {}
+         print("Rolling back with ", func, table.unpack(c))
+         local good, err = pcall(func, err_roll_back, table.unpack(c))
+         print(err)
+         if not good then
+            cp.pop_all(err_roll_back)
+            cp.push(points, func, table.unpack(c))
+            error("obstacle on return path")
+         end
+      end
+   end
+   
+   return cp
+end
+
+function cp.pop_all(points)
+   if not points then points = checkpoints end
+   
+   while #points > 0 do
+      cp.pop(points)
+   end
+end
+
+function cp.turn(points, times)
+   times = times or 1
+   
+   print("Turn", points, times)
+   for i = 1, math.abs(times) do
+      if robot.turn(times < 0) then
+         cp.push(points, cp.turn, not(times < 0))
+      else
+         error({"turn", times})
+      end
+   end
+
+   cp.replace(points, math.abs(times), cp.turn, -times)
+
+   return cp
+end
+
+function cp.turnLeft(points, times)
+   return cp.turn(points, times or 1)
+end
+
+function cp.turnRight(points, times)
+   return cp.turn(points, -(times or 1))
+end
+
+function cp.move(points, dir)
+   if robot.move(dir) then
+      cp.push(points, cp.move, cp.flippedSides[dir])
+      
+      return cp
+   else
+      error({"move", dir}, 2)
+   end
+end
+
+function cp.move_by(points, dir, blocks)
+   for i = 1, (blocks or 1) do
+      cp.move(points, dir)
+   end
+
+   cp.replace(points, (blocks or 1), cp.move_by, cp.flippedSides[dir], blocks)
+   
+   return cp
+end
+
+local dir_procs = {
+   forwardBy = "forward",
+   backBy = "back",
+   upBy = "up",
+   downBy = "down"
+}
+for name, dir in pairs(dir_procs) do
+   cp[name] = function(points, n)
+      if not n then
+         n = points
+         points = checkpoints
+      end
+      
+      return cp.move_by(points, sides[dir], n)
+   end
+
+   cp[dir] = cp[name]
+end
+
+return cp

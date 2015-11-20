@@ -5,6 +5,7 @@ local sides = require("sides")
 local component = require("component")
 local computer = component.computer
 local robot = component.robot
+local flipped_sides = require("rob/flipped_sides")
 
 local CheckPointError = {}
 
@@ -36,13 +37,7 @@ function CheckPointError:raise(command, reason, ...)
 end
 
 local cp = {
-   CheckPointError = CheckPointError,
-   flippedSides = {
-      [ sides.front ] = sides.back,
-      [ sides.back ] = sides.front,
-      [ sides.up ] = sides.down,
-      [ sides.down ] = sides.up
-   }
+   CheckPointError = CheckPointError
 }
 
 function cp:new()
@@ -105,9 +100,6 @@ function cp:rollback(n)
             local err_roll_back = cp:new()
             -- print("Rolling back with ", func, table.unpack(c))
             local good, err = pcall(func, err_roll_back, table.unpack(c))
-            if err then
-               sneaky.print_error(err)
-            end
             
             if not good then
                err_roll_back:rollback_all()
@@ -220,7 +212,7 @@ function cp:move(dir)
    until good or times >= 6
    
    if good then
-      self:push(self.move, cp.flippedSides[dir])
+      self:push(self.move, flipped_sides[dir])
       
       return self
    else
@@ -233,7 +225,7 @@ function cp:move_by(dir, blocks)
       self:move(dir)
    end
 
-   self:replace((blocks or 1), self.move_by, cp.flippedSides[dir], blocks)
+   self:replace((blocks or 1), self.move_by, flipped_sides[dir], blocks)
    
    return self
 end

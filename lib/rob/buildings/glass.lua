@@ -1,9 +1,12 @@
-local sneaky= require("sneaky/util")
+local sneaky = require("sneaky/util")
+local number = require("sneaky/number")
 local filler = require("rob/filler")
 local inv = require("rob/inventory")
 local rob = require("rob")
 local sides = require("sides")
 local styles = require("rob/buildings/styles")
+local vec3d = require("vec3d")
+local rotated_sides = require("rob/rotated_sides")
 
 local glass = {}
 
@@ -174,22 +177,67 @@ function glass.build_roof(width, length, blocks)
    filler.floor(width, length, roof_selector, blocks)
 end
 
+function glass.build_door(length, level_height)
+   local mark = rob.checkpoint()
+   
+   local width = 3
+   if number.even(length) then
+      width = 2
+   end
+   local height = math.max(2, level_height - 3)
+   
+   rob.turn()
+   rob.forward(length / 2 - width / 2 - 1)
+
+   for x = 1, width do
+      rob.forward()
+
+      local z_mark = rob.checkpoint()
+
+      rob.turn(-1)
+      rob.up() -- skip floor
+
+      for z = 1, height do
+         rob.swing(sides.forward)
+         rob.up()
+      end
+
+      rob.rollback_to(z_mark)
+   end
+
+   rob.rollback_to(mark)
+end
+
 function glass.build(width, length, level_height, levels, blocks, initial_floor)
    assert(width > 7, "width must be >7")
    assert(length > 7, "length must be >7")
    assert(level_height > 3, "level_height must be >3")
    assert(levels > 0, "levels must be >0")
-   
+
+   initial_floor = initial_floor or 0
    blocks = sneaky.merge(styles.default, blocks)
 
-   for level = 1, levels do
-      filler.fillUp(width, length, level_height, initial_floor, glass.selector, blocks)
+   local mark = rob.checkpoint()
+   local initial_level, layer = math.modf(initial_floor / level_height)
+   
+   for level = initial_level + 1, levels do
+      local initial_layer = 1
+      if level == (initial_level + 1) then
+         initial_layer = math.max(1, math.floor(level_height * layer))
+      end
+      
+      filler.fillUp(width, length, level_height, initial_layer, glass.selector, blocks)
    end
 
    glass.build_roof(width, length, blocks)
 
    rob.up()
    glass.build_ladder(width, length, level_height, levels, blocks)
+
+   rob.rollback_to(mark)
+   if initial_floor == 1 then
+      glass.build_door(length, level_height)
+   end
 end
 
 function glass.check_requirements(width, length, level_height, levels, blocks)
@@ -236,6 +284,64 @@ function glass.requirements(width, length, level_height, levels, block_types)
       return ret
    else
       return blocks
+   end
+end
+
+function glass.routes(router, prefix, corner_stone, build_dir, width, length, level_height, levels)
+   -- This building's routes look like:
+   --    yzzzzz
+   --   +y-----+
+   --   |yzzzzz|
+   --   +y-----+
+   --   |yzzzzz|
+   --   +y-----+
+   -- xxxyzzzzz|
+   -- --+------+--
+   local bsides = {
+      front = rotated_sides[build_dir].front,
+      back = rotated_sides[build_dir].back,
+      left = rotated_sides[build_dir].left,
+      right = rotated_sides[build_dir].right,
+      up = sides.up,
+      down = sides.down
+   }
+
+   function coord(x, y, z)
+      local v
+      if build_dir == sides.north then
+         v = vec3d:new(-x, y, -z)
+      elseif build_dir == sides.east then
+         v = vec3d:new(-z, y, -x)
+      elseif build_dir == sides.south then
+         v = vec3d:new(x, y, z)
+      else
+         v = vec3d:new(z, y, x)
+      end
+      return corner_stone + v
+   end
+   
+   router:add_node(prefix .. ":cornerstone", coord(0, 0, 0))
+   router:add_node(prefix .. ":roof", coord(0, levels * level_height + 1, 0))
+   router:add_node(prefix .. ":entry", coord(length / 2, 1, 0))
+   router:add_node(prefix .. ":exit", coord(length / 2 + 1, 1, 0))
+
+   router:add_bipath(prefix .. ":cornerstone", bsides.up, prefix .. ":roof", bsides.down, { { "up", levels * level_height + 1 } })
+   router:add_bipath(prefix .. ":entry", bsides.right, prefix .. ":cornerstone", bsides.left, { { "forward", length / 2 - 1 }, { "down", 1 } })
+   router:add_bipath(prefix .. ":entry", bsides.left, prefix .. ":exit", bsides.right, { { "forward" } })
+
+   for floor = 1, levels do
+      router:add_node(prefix .. ":floor-" .. floor .. ":up", coord(4, floor * level_height + 1, 2))
+      router:add_node(prefix .. ":floor-" .. floor .. ":down", coord(length - 4, floor * level_height + 1, 2))
+
+      if floor == 1 then
+         router:add_path(prefix .. ":entry", bsides.front, prefix .. ":floor-" .. floor .. ":up", bsides.left, { { "forward", 2 }, { "turn", -1 }, { "forward", length / 2 - 4 } })
+         router:add_path(prefix .. ":floor-" .. floor .. ":down", bsides.right, prefix .. ":exit", bsides.front, { { "forward", length / 2 - 4 }, { "turn", -1 }, { "forward", 2 } })
+      else
+         router:add_path(prefix .. ":floor-" .. (floor - 1) .. ":up", bsides.up, prefix .. ":floor-" .. floor .. ":up", bsides.down, { { "up", level_height } })
+         router:add_path(prefix .. ":floor-" .. floor .. ":down", bsides.up, prefix .. ":floor-" .. (floor - 1) .. ":down", bsides.down, { { "down", level_height } })
+      end
+
+      router:add_bipath(prefix .. ":floor-" .. floor .. ":up", bsides.left, prefix .. ":floor-" .. floor .. ":down", bsides.right, { { "forward", length - 7 } })
    end
 end
 
