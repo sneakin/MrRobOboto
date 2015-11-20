@@ -2,7 +2,7 @@ local table = require("table")
 local sneaky = {}
 
 function sneaky.print_error(err, trace)
-   print(err)
+   print("Error:", err)
    if type(err) == "table" then
       for k,v in pairs(err) do
          print(k, v)
@@ -14,10 +14,12 @@ function sneaky.print_error(err, trace)
 end
 
 function sneaky.subtable(tbl, i, n)
+   n = n or (#tbl - i + 1)
+   
    if #tbl > n then
       local r = {}
       for x = 1, n do
-         r[x] = tbl[i + x]
+         r[x] = tbl[(i-1) + x]
       end
       return r
    else
