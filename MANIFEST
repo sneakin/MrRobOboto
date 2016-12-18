@@ -1,5 +1,6 @@
 .gitignore
 COPYING
+MANIFEST
 README.md
 autorun.lua
 bin/back.lua
@@ -36,8 +37,10 @@ bin/swing.lua
 bin/turn-to.lua
 bin/turn.lua
 bin/up.lua
+install.lua
 lib/rob/blinker.lua
 lib/rob/buildings/glass.lua
+lib/rob/buildings/simple.lua
 lib/rob/buildings/styles.lua
 lib/rob/checkpoints.lua
 lib/rob/checkpoints.lua.bak
@@ -65,5 +68,6 @@ lib/vec3d.lua
 localrun1.lua
 mock/lib/sides.lua
 scripts/boremine.lua
+scripts/release.sh
 sites/test-site/routes.lua
 test/runners/router.lua
