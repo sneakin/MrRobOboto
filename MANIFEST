@@ -66,6 +66,7 @@ lib/sneaky/number.lua
 lib/sneaky/util.lua
 lib/vec3d.lua
 localrun1.lua
+man/example
 mock/lib/sides.lua
 scripts/boremine.lua
 scripts/release.sh

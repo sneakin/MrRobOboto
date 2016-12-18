@@ -1,0 +1,16 @@
+NAME
+  cmd - Description
+
+SYNOPSIS
+  cmd arg1 arg2...
+
+DESCRIPTION
+  Full description
+
+OPTIONS
+  -h, --help
+    Display the program's help.
+
+ENVIRONMENT VARIABLES
+  VAR
+    Description
