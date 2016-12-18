@@ -127,6 +127,10 @@ function inventory.countInternal(item_pattern)
    return n
 end
 
+function inventory.currentSlot()
+  return crobot.select()
+end
+
 function inventory.findFirstInternal(item_pattern)
    local slot = crobot.select()
    local stack = inv.getStackInInternalSlot(slot)

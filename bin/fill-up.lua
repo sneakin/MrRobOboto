@@ -9,11 +9,12 @@ local length = tonumber(args[3])
 local height = tonumber(args[4])
 local initial_floor = tonumber(args[5])
 
+print("Filling " .. width .. "x" .. length .. "x" .. height .. " with " .. item)
 robinv.selectFirst(item)
 
 local good, err = pcall(filler.fillUp, width, length, height, initial_floor,
                         function(x, y, w, h, z, h)
-                           if robinv.count() <= 0 then
+                           if robinv.countInternalSlot() <= 0 then
                               robinv.selectFirst(item)
                            end
 

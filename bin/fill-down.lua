@@ -12,7 +12,7 @@ robinv.selectFirst(item)
 
 local good, err = pcall(filler.fillDown, width, length, height,
                         function(x, y, w, h, z, h)
-                           if robinv.count() <= 0 then
+                           if robinv.countInternalSlot() <= 0 then
                               robinv.selectFirst(item)
                            end
 

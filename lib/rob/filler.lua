@@ -110,7 +110,7 @@ function filler.floor(width, length, block_selector, ...)
    local mark = rob.checkpoint()
 
    block_selector(1, 1, width, length, ...)
-   
+
    rob.forward()
    local area_mark = rob.checkpoint()
    areas.move_to_end(rob.checkpoints, width, length)
