@@ -25,6 +25,8 @@ bin/inv-summary.lua
 bin/inv-take-all.lua
 bin/inv-take.lua
 bin/lumber.lua
+bin/net-addr.lua
+bin/net-stat.lua
 bin/netsh.lua
 bin/oc-light.lua
 bin/path.lua
@@ -33,11 +35,16 @@ bin/planter.lua
 bin/recipe.lua
 bin/rollback.lua
 bin/route.lua
+bin/rsh.lua
+bin/rshd.lua
 bin/swing.lua
 bin/turn-to.lua
 bin/turn.lua
 bin/up.lua
 install.lua
+lib/net.lua
+lib/net/server.lua
+lib/net/stream.lua
 lib/rob/blinker.lua
 lib/rob/buildings/glass.lua
 lib/rob/buildings/simple.lua
