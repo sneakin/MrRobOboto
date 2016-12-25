@@ -45,6 +45,22 @@ function sneaky.append(tbl, more)
    return new_tbl
 end
 
+function sneaky.join(t, joiner, convertor)
+  joiner = joiner or " "
+  convertor = convertor or function(s) return s end
+
+  local s = ""
+
+  for n, v in ipairs(t) do
+    if n ~= 1 then
+      s = s .. joiner
+    end
+    s = s .. convertor(v)
+  end
+
+  return s  
+end
+
 function sneaky.class(klass, initial_state)
    local v = sneaky.copy(initial_state)
    setmetatable(v, klass)
