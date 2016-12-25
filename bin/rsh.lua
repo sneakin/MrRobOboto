@@ -25,7 +25,7 @@ client:execute(cmd, table.unpack(cmd_args))
 local ok, line, from
 
 repeat
-  ok, from, line = client:poll()
+  ok, from, line = client:poll(10)
   if ok and line then
     print(tostring(from) .. ">", line)
   elseif not ok then
