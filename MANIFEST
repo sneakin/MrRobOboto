@@ -26,6 +26,7 @@ bin/inv-take-all.lua
 bin/inv-take.lua
 bin/lumber.lua
 bin/net-addr.lua
+bin/net-disco.lua
 bin/net-stat.lua
 bin/netsh.lua
 bin/oc-light.lua
@@ -43,6 +44,7 @@ bin/turn.lua
 bin/up.lua
 install.lua
 lib/net.lua
+lib/net/rsh.lua
 lib/net/server.lua
 lib/net/stream.lua
 lib/rob/blinker.lua

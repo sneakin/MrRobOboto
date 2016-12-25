@@ -1,4 +1,5 @@
 local event = require("event")
+local sneaky = require("sneaky/util")
 local NetStream = require("net/stream")
 
 local NetServer = {}
@@ -28,17 +29,18 @@ function NetServer:loop()
 end
 
 function NetServer:background()
-  event.listen("modem_message", function(type, to, from, port, distance, reply_port, body)
-    self.handler(NetStream:new(self.modem, from, reply_port, self.port), body)
+  return event.listen("modem_message", function(type, to, from, port, distance, reply_port, ...)
+    self.handler(NetStream:new(self.modem, from, reply_port, self.port), ...)
   end)
 end
 
 function NetServer:poll(timeout)
   local packet = { event.pull(timeout, "modem_message", nil, nil, self.port) }
-  local type, to, from, port, distance, reply_port, body = table.unpack(packet)
+  local type, to, from, port, distance, reply_port = table.unpack(packet)
+  local body = sneaky.subtable(packet, 7)
 
   if type == "modem_message" then
-    self.handler(NetStream:new(self.modem, from, reply_port, self.port), body)
+    self.handler(NetStream:new(self.modem, from, reply_port, self.port), table.unpack(body))
   end
 end
 

@@ -11,7 +11,7 @@ package.path = package.path .. ";" .. dir .. "lib/?/init.lua"
 
 -- TODO let require("rob") set all this up
 local robot = false
-for kind, addr in pairs(component.list()) do
+for addr, kind in pairs(component.list()) do
    if kind == "robot" then
       robot = true
       break
@@ -20,6 +20,9 @@ end
 
 if robot then
    rob = require("rob")
+
+  local shell = require("shell")
+  shell.execute("rshd")
 end
 
 sneaky = require("sneaky/util")

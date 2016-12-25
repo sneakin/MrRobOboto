@@ -2,7 +2,8 @@
 
 -- Usage: rsh host[:port] cmd [arguments...]
 
-local NetStream = require("net/stream")
+local rsh = require("net/rsh")
+local sneaky = require("sneaky/util")
 local component = require("component")
 local modem = component.modem
 
@@ -10,26 +11,27 @@ local args = {...}
 local host = args[1]
 local port = 23
 local cmd = args[2]
-local arg1 = args[3]
+local cmd_args = sneaky.subtable(args, 3)
 
 if host == "0" then
   host = nil
 end
 
-local client = NetStream:new(modem, host, port)
+local client = rsh:new(modem, host, port)
 
-client:send(cmd, arg1)
+print("Executing " .. sneaky.join({cmd, table.unpack(cmd_args)}))
+client:execute(cmd, table.unpack(cmd_args))
 
-local ok, line
+local ok, line, from
 
 repeat
-  ok, line = client:recv(10)
+  ok, from, line = client:poll()
   if ok and line then
-    print(line)
+    print(tostring(from) .. ">", line)
   elseif not ok then
-    print(ok, line)
+    print("Error", ok, line)
     break
   end
-until line == nil
+until not ok
 
 client:close()

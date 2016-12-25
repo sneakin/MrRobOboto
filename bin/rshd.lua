@@ -4,7 +4,15 @@
 
 -- Usage: rshd [port] [PATH]
 
+-- todo move towards more of a job server:
+--   create a job
+--   poll a specific job
+--   write to a specific job
+--   check status of job
+--   kill job
+
 local NetServer = require("net/server")
+local sneaky = require("sneaky/util")
 local shell = require("shell")
 
 local component = require("component")
@@ -19,19 +27,20 @@ if path then
 end
 
 local server = NetServer:listen(modem, port, function(stream, cmd, ...)
-  print("Executing '" .. cmd .. "' for " .. tostring(stream))
-  local output = io.popen(cmd)
+  local full_cmd = sneaky.join({cmd, ...})
+  print("Executing '" .. full_cmd .. "' for " .. tostring(stream))
+  local output = io.popen(full_cmd)
   if output then
     local inline, outline
     repeat
       inline = stream:recv(1)
       if inline then
-        print(">", inline)
+        print(tostring(stream) .. ">", inline)
         output:write(inline)
       end
 
       outline = output:read()
-      print("<", outline)
+      print(tostring(stream) .. "<", outline)
       stream:send(true, outline)
     until inline == nil and outline == nil
 
@@ -40,8 +49,9 @@ local server = NetServer:listen(modem, port, function(stream, cmd, ...)
     stream:send(nil, "not-found")
   end
 
-  print(">EOF\n")
+  print(tostring(stream) .. ">EOF\n")
 end)
 
 -- server:loop()
+print("rshd listening on " .. port)
 server:background()

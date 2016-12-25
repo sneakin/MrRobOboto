@@ -1,17 +1,16 @@
 local event = require("event")
 local Net = require("net")
+local sneaky = require("sneaky/util")
 
 local NetStream = {}
 
 function NetStream:new(modem, remote, port, src_port)
-  local e = {
+  local e = sneaky.class(self, {
     modem = modem,
     port = port,
     remote = remote,
     src_port = src_port or Net.random_port(modem)
-  }
-  setmetatable(e, self)
-  self.__index = self
+  })
 
   e:init()
 
@@ -31,13 +30,24 @@ function NetStream:close()
   self.modem.close(self.src_port)
 end
 
-function NetStream:recv(timeout)
+function NetStream:recvfrom(timeout)
   local packet = { event.pull(timeout, "modem_message", nil, self.remote, self.src_port) }
-  local type, to, from, port, distance, reply_port, body, a1, a2, a3 = table.unpack(packet)
+  local type, to, from, port, distance, reply_port = table.unpack(packet)
+  local body = sneaky.subtable(packet, 7)
 
   if type == "modem_message" then
-    return body, a1, a2, a3
+    self._last_distance = distance
+    return body[1], from, table.unpack(sneaky.subtable(body, 2))
   end
+end
+
+function NetStream:getLastDistance()
+  return self._last_distance or 0
+end
+
+function NetStream:recv(timeout)
+  local packet = {self:recvfrom(timeout)}
+  return packet[1], table.unpack(sneaky.subtable(packet, 3))
 end
 
 function NetStream:send(...)
