@@ -1,5 +1,18 @@
 local table = require("table")
-local sneaky = {}
+local sneaky = {
+}
+
+local PATH_PATTERN = "(/.*)/(.*[^/])"
+
+function sneaky.basename(path)
+  local dir, base = string.gmatch(path, PATH_PATTERN)()
+  return base
+end
+
+function sneaky.dirname(path)
+  local dir, base = string.gmatch(path, PATH_PATTERN)()
+  return dir
+end
 
 function sneaky.print_error(err, trace)
    print("Error:", err)
@@ -304,5 +317,7 @@ function sneaky.merge(a, b)
    
    return tbl
 end
+
+sneaky.root = sneaky.dirname(sneaky.dirname(debug.getinfo(2, "S").source))
 
 return sneaky
