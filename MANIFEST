@@ -1,4 +1,6 @@
 .gitignore
+.install
+.prop
 COPYING
 MANIFEST
 README.md
@@ -42,7 +44,7 @@ bin/swing.lua
 bin/turn-to.lua
 bin/turn.lua
 bin/up.lua
-install.lua
+download.lua
 lib/net.lua
 lib/net/rsh.lua
 lib/net/server.lua
@@ -71,6 +73,7 @@ lib/rob/pathing/waypoints.lua
 lib/rob/planter.lua
 lib/rob/rotated_sides.lua
 lib/rob/site/router.lua
+lib/sneaky/command.lua
 lib/sneaky/number.lua
 lib/sneaky/util.lua
 lib/vec3d.lua

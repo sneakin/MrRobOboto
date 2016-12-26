@@ -1,10 +1,21 @@
-local rob = require("rob")
+local Command = require("sneaky/command")
+local sneaky = require("sneaky/util")
 
-local args = {...}
-local times = tonumber(args[1]) or 1
+Command:define({...}, {
+    name = sneaky.basename(debug.getinfo(2, "S").source),
+    usage = "[N]",
+    description = "Turns Rob N quarter turns.",
+    run = function(options, args)
+      local rob = require("rob")
 
-rob.turn(times)
+      local times = tonumber(args[1]) or 1
 
-if rob.hasNavigation() then
-  print(rob.navigation.getFacing())
-end
+      rob.turn(times)
+
+      if rob.hasNavigation() then
+        print(rob.navigation.getFacing())
+      end
+
+      return 0
+    end
+})
