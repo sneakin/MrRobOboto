@@ -59,6 +59,10 @@ function sneaky.append(tbl, more)
 end
 
 function sneaky.join(t, joiner, convertor)
+  if type(t) ~= "table" then
+    t = {t}
+  end
+  
   joiner = joiner or " "
   convertor = convertor or function(s) return s end
 

@@ -1,41 +1,66 @@
-local rob = require("rob")
+local Command = require("sneaky/command")
+local sneaky = require("sneaky/util")
 
-local args = {...}
+Command:define({...}, {
+    name = sneaky.basename(debug.getinfo(2, "S").source),
+    usage = "width length level_height levels",
+    description = "Builds using a preprogrammed floorplan.",
+    long_help = "Returns to the starting position on success or fail.",
+    required_values = 4,
+    arguments = {
+      type = {
+        description = "Floorplan to use",
+        default = "simple"
+      },
+      style = {
+        description = "Name of the table defining the type of blocks to use.",
+        default = "default"
+      },
+      initial = Command.Argument.Integer({
+          description = "Floor to start work building.",
+          default = 0
+      })
+    },
+    aliases = {
+      t = "type",
+      s = "style"
+    },
+    run = function(options, args)
+      local rob = require("rob")
 
-if #args <= 5 then
-   print("Usage: build type width length level_height levels style initial_floor")
-   os.exit()
-end
+      local building_name = options.type
+      local width = tonumber(args[1])
+      local length = tonumber(args[2])
+      local level_height = tonumber(args[3])
+      local levels = tonumber(args[4])
+      local style = options.style
+      local initial_floor = options.initial
 
-local building_name = args[1]
-local width = tonumber(args[2])
-local length = tonumber(args[3])
-local level_height = tonumber(args[4])
-local levels = tonumber(args[5])
-local style = args[6] or "default"
-local initial_floor = tonumber(args[7])
+      local building = require("rob/buildings/" .. building_name)
+      local styles = require("rob/buildings/styles")
 
-local building = require("rob/buildings/" .. building_name)
-local styles = require("rob/buildings/styles")
+      local blocks = styles[style]
+      if not blocks then
+        print("Style " .. style .. " was not found.")
+        print("Try one of:")
+        for k, v in pairs(styles) do
+          print("\t" .. k)
+        end
 
-local blocks = styles[style]
-if not blocks then
-   print("Style " .. style .. " was not found.")
-   print("Try one of:")
-   for k, v in pairs(styles) do
-      print("\t" .. k)
-   end
-   
-   os.exit()
-end
+        return -2
+      end
 
-print("Building " .. building_name .. " at " .. width .. "x" .. length .. " with " .. levels .. " " .. level_height .. " tall levels starting at " .. (initial_floor or 1))
+      print("Building a " .. building_name .. " building that is " .. width .. "x" .. length .. " with " .. levels .. " levels each " .. level_height .. " blocks tall starting at floor " .. initial_floor .. ".")
 
-local good, err = pcall(building.build, width, length, level_height, levels, blocks, initial_floor)
-rob.rollback_all()
+      local good, err = pcall(building.build, width, length, level_height, levels, blocks, initial_floor)
+      rob.rollback_all()
 
-if good then
-   print("Success!")
-else
-   print("Failed.")
-end
+      if good then
+        print("Success!")
+        return 0
+      else
+        print("Failed.")
+        return -3
+      end
+    end
+})

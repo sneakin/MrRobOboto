@@ -1,55 +1,78 @@
+local Command = require("sneaky/command")
 local sneaky = require("sneaky/util")
-local number = require("sneaky/number")
-local filler = require("rob/filler")
-local rob = require("rob")
-local robinv = require("rob/inventory")
 
-local args = {...}
-local item = args[1]
-local width = tonumber(args[2])
-local length = tonumber(args[3])
-local pattern = args[4]
-local pattern_args = {}
+Command:define({...}, {
+    name = sneaky.basename(debug.getinfo(2, "S").source),
+    description = "Fills in an WIDTHxLENGTH area.",
+    usage = "width [length]",
+    required_values = 1,
+    arguments = {
+      item = {
+        description = "Item to fill the area with.",
+        default = "cobblestone"
+      },
+      pattern = {
+        description = "Fill pattern to use."
+      }
+    },
+    aliases = {
+      i = "item",
+      p = "pattern"
+    },
+    run = function(options, args)
+      local number = require("sneaky/number")
+      local filler = require("rob/filler")
+      local rob = require("rob")
+      local robinv = require("rob/inventory")
 
-local pattern_func = function(x, y, w, h, z, h)
-   if robinv.countInternalSlot() <= 0 then
-      assert(robinv.selectFirst(item), "no item")
-   end
+      local item = options.item
+      local width = tonumber(args[1])
+      local length = tonumber(args[2] or width)
+      local pattern = options.pattern
 
-   return true
-end
+      local pattern_func = function(x, y, w, h, z, h)
+        if robinv.countInternalSlot() <= 0 then
+          assert(robinv.selectFirst(item), "no item")
+        end
 
-if pattern == "checkers" then
-   function select_block(x, y)
-      if number.even(y) then
-         if number.even(x) then
-            return item
-         else
-            return args[5]
-         end
-      else
-         if number.even(x) then
-            return args[5]
-         else
-            return item
-         end
+        return true
       end
-   end
-   
-   pattern_func = function(x, y, w, h, z, h)
-      assert(robinv.selectFirst(select_block(x, y)), "no item")
-      return true
-   end
-end
 
-robinv.selectFirst(item)
+      if pattern == "checkers" then
+        function select_block(x, y)
+          if number.even(y) then
+            if number.even(x) then
+              return item
+            else
+              return args[5]
+            end
+          else
+            if number.even(x) then
+              return args[5]
+            else
+              return item
+            end
+          end
+        end
+        
+        pattern_func = function(x, y, w, h, z, h)
+          assert(robinv.selectFirst(select_block(x, y)), "no item")
+          return true
+        end
+      end
 
-local good, err = pcall(filler.floor, width, length, pattern_func)
-rob.rollback_all()
+      robinv.selectFirst(item)
 
-if good then
-   print("Success!")
-else
-   print("Failed.")
-   sneaky.print_error(err, debug.traceback())
-end
+      local good, err = pcall(filler.floor, width, length, pattern_func)
+      rob.rollback_all()
+
+      if good then
+        print("Success!")
+        return 0
+      else
+        print("Failed.")
+        sneaky.print_error(err, debug.traceback())
+        return -1
+      end
+    end
+})

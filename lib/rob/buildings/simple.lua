@@ -89,7 +89,7 @@ function simple.requirements(width, length, level_height, levels, block_types)
    blocks.floor = (width - 1) * (length - 1) * levels - 5
    blocks.ceiling = (width - 1) * (length - 1) * levels - 5
    blocks.roof = width * length - 5
-   blocks.outer_wall = 2 * width + 2 * length
+   blocks.outer_wall = (2 * width + 2 * length) * level_height * levels
 
    if block_types then
       local ret = {}

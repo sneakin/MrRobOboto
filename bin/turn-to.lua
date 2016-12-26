@@ -1,15 +1,26 @@
-local rob = require("rob")
-local sides = require("sides")
+local Command = require("sneaky/command")
+local sneaky = require("sneaky/util")
 
-local args = {...}
+Command:define({...}, {
+    name = sneaky.basename(debug.getinfo(2, "S").source),
+    usage = "DIR",
+    description = "Turns Rob to face DIR.",
+    required_values = 1,
+    run = function(options, args)
+      local rob = require("rob")
+      local sides = require("sides")
 
-local dir = args[1]
+      local dir = args[1]
 
-if dir == nil then
-  print("Usage: turn-to dir")
-  for i, j in ipairs(sides) do
-    print(i, j)
-  end
-else
-  rob.face(dir)
-end
+      if dir == nil then
+        print("The direction must be:")
+        for i, j in ipairs(sides) do
+          print(i, j)
+        end
+        return -1
+      else
+        rob.face(dir)
+        return 0
+      end
+    end
+})

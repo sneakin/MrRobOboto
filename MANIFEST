@@ -71,6 +71,7 @@ lib/rob/pathing/waypoints.lua
 lib/rob/planter.lua
 lib/rob/rotated_sides.lua
 lib/rob/site/router.lua
+lib/sneaky/command.lua
 lib/sneaky/number.lua
 lib/sneaky/util.lua
 lib/vec3d.lua
