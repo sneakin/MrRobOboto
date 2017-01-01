@@ -214,7 +214,8 @@ end
 
 function Command.Argument.Side(options)
   return sneaky.merge(options, {
-                        parse_value = function(v) return sides[v] end
+                        parse_value = function(v) return sides[v] end,
+                        validator = function(v) return sides[v] ~= nil end
   })
 end
 
