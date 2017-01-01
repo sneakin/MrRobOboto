@@ -38,4 +38,9 @@ Now you can obtain a read only Mr. Rob Oboto disk in dungeons or in creative mod
 Usage
 ---
 
-Mr. Rob Oboto comes with many many commands. Look inside `./bin/`. Each supports a `-help` argument that prints out a description and list of arguments. Most commands are robot related while some manage a coordinator and others are for fun. A few commands also provide background services. These have `rc` scripts to automatically start them upon boot.
+Mr. Rob Oboto comes with many many commands. Look inside `./bin/`. Each supports a `-help` argument that prints out a description and list of arguments. Most commands are robot related while some manage a coordinator and others are for fun.
+
+Most robot commands support movement checkpoints and rollbacks. For example: if the robot tries to fill an area that was not cleared, he will stop and move back to where he booted waiting for instruction. The checkpoints can be managed with the `path` and `rollback` commands.
+
+A few commands also provide background services. These have `rc` scripts to automatically start them upon boot. You have to install everything to your root disk before you can use `rc service enable`. Look in `./etc/rc.d/` to see what services are available.
+
