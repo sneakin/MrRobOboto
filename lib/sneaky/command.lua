@@ -105,6 +105,7 @@ function Command:print_usage()
     if not arg.boolean and arg.default then
       print("    Default: " .. tostring(arg.default))
     end
+
     print("")
   end
 end
@@ -179,7 +180,11 @@ function Command:parse_args(args)
             n = n + 1
           end
         else
+<<<<<<< HEAD
           return false, ("Invalid value for " .. arg_name .. ": " .. value), n
+=======
+          return false, value, n
+>>>>>>> 1fa79b9e8ec8040827a9851ad0d5b4d0001ad02e
         end
 
         if arg.aborts then
