@@ -26,17 +26,37 @@ Command:define({...}, {
       }),
       path = {
         description = "Restrict commands to this $PATH."
+      },
+      pid = {
+        description = "Path to the file to store the event listener ID.",
+        default = "/tmp/rshd.pid"
+      },
+      kill = {
+        description = "Only kill the last installed daemon.",
+        boolean = true,
+        default = nil
       }
     },
     run = function(options, args)
       local NetServer = require("net/server")
       local shell = require("shell")
+      local fs = require("filesystem")
+      local pid = require("sneaky/pid")
 
       local component = require("component")
       local modem = component.modem
 
       local port = options.port
       local path = options.path
+
+      if pid.exists(options.pid) then
+        event.cancel(pid.read(options.pid))
+        fs.remove(options.pid)
+      end
+
+      if options.kill then
+        return 0
+      end
 
       if path then
         shell.setPath(path)
@@ -72,6 +92,9 @@ Command:define({...}, {
 
       -- server:loop()
       print("rshd listening on " .. port)
-      server:background()
+      local listener = server:background()
+      pid.write(options.pid, listener)
+
+      return 0
     end
 })

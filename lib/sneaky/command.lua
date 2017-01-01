@@ -1,4 +1,5 @@
 local sneaky = require("sneaky/util")
+local sides = require("sides")
 local Command = {}
 
 local DEFAULT_OPTIONS = {
@@ -10,7 +11,7 @@ local DEFAULT_OPTIONS = {
   arguments = {
     help = {
       description = "Prints this message.",
-      value = nil,
+      default = nil,
       aborts = true,
       abort_message = function(cmd)
         return cmd:print_usage()
@@ -96,9 +97,12 @@ function Command:print_usage()
     if aliases and #aliases > 0 then
       print("  " .. sneaky.join(table.sort(aliases), ", "))
     end
+
+    if arg.description then
+      print("    " .. arg.description)
+    end
     
-    print("    " .. arg.description)
-    if arg.default then
+    if not arg.boolean and arg.default then
       print("    Default: " .. tostring(arg.default))
     end
     print("")
@@ -144,7 +148,7 @@ function Command:parse_args(args)
         local value = arg.default
         
         if arg.boolean then
-          value = true
+          value = not arg.default
         else
           value = args[n + 1]
         end
@@ -160,8 +164,6 @@ function Command:parse_args(args)
         if valid then
           if arg.parse_value then
             value = arg.parse_value(args[n + 1])
-          else
-            value = args[n + 1]
           end
 
           if arg.list then
@@ -177,7 +179,7 @@ function Command:parse_args(args)
             n = n + 1
           end
         else
-          return false, value, n
+          return false, ("Invalid value for " .. arg_name .. ": " .. value), n
         end
 
         if arg.aborts then
@@ -206,6 +208,12 @@ function Command.Argument.Integer(options)
   return sneaky.merge(options, {
                         parse_value = tonumber,
                         validator = "^[0-9]+"
+  })
+end
+
+function Command.Argument.Side(options)
+  return sneaky.merge(options, {
+                        parse_value = function(v) return sides[v] end
   })
 end
 
