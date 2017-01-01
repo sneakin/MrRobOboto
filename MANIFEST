@@ -47,6 +47,8 @@ bin/turn-to.lua
 bin/turn.lua
 bin/up.lua
 download.lua
+etc/rc.d/kiosk-powerd.lua
+etc/rc.d/rshd.lua
 lib/net.lua
 lib/net/rsh.lua
 lib/net/server.lua
