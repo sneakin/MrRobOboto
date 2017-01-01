@@ -1,0 +1,36 @@
+local fs = require("filesystem")
+local sneaky = require("sneaky/util")
+
+local DEST = _ENV.install.to or "/"
+local SRC = _ENV.install.from or sneaky.dirname(debug.getinfo(2, "S").source) .. "/"
+
+function link(src)
+  print(SRC .. src .. " -> " .. DEST .. src)
+  fs.link(SRC .. src, DEST .. src)
+end
+
+function copy(src)
+  print(SRC .. src .. " -> " .. DEST .. src)
+  fs.copy(SRC .. src, DEST .. src)
+end
+
+function load_manifest(path)
+  local retval = {}
+  local f = io.open(path, "r")
+
+  for line in f:lines() do
+    table.insert(retval, line)
+  end
+
+  f:close()
+
+  return retval
+end
+
+local manifest = load_manifest(SRC .. "/MANIFEST")
+
+print("Installing files from " .. SRC .. " into " .. DEST)
+
+for n, file in ipairs(manifest) do
+  copy(file)
+end
