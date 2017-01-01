@@ -29,8 +29,13 @@ To install into the root file system, run while your download disk is inserted:
 Loot Disk
 ---
 
-A Mr. Rob Oboto loot disk can be created by copying the contents of this repository to "$MINECRAFT/saves/$WORLD/opencomputers/loot/MrRobOboto" if you're setting this up on your client or "$MINECRAFT_SERVER/opencomputers/loot/MrRobOboto" for a server. Then add a line to "$MINECRAFT/saves/$WORLD/opencomputers/loot/loot.properties" for a client that reads:
+A Mr. Rob Oboto loot disk can be created by copying the contents of this repository to `$MINECRAFT/saves/$WORLD/opencomputers/loot/MrRobOboto` if you're setting this up on your client or `$MINECRAFT_SERVER/opencomputers/loot/MrRobOboto` for a server. Then add a line to `$MINECRAFT/saves/$WORLD/opencomputers/loot/loot.properties` for a client that reads:
 
     MrRobOboto=Mr. Rob Oboto:1:dyeBlue
 
-Now you can obtain a Mr. Rob Oboto disk in dungeons or in creative mode. For a server, adjust the path as for the directory.
+Now you can obtain a read only Mr. Rob Oboto disk in dungeons or in creative mode. For a server, adjust the path as for the disk's directory.
+
+Usage
+---
+
+Mr. Rob Oboto comes with many many commands. Look inside `./bin/`. Each supports a `-help` argument that prints out a description and list of arguments. Most commands are robot related while some manage a coordinator and others are for fun. A few commands also provide background services. These have `rc` scripts to automatically start them upon boot.
