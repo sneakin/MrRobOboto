@@ -26,12 +26,14 @@ bin/inv-summary-int.lua
 bin/inv-summary.lua
 bin/inv-take-all.lua
 bin/inv-take.lua
+bin/kiosk-powerd.lua
 bin/lumber.lua
 bin/net-addr.lua
 bin/net-disco.lua
 bin/net-stat.lua
 bin/netsh.lua
 bin/oc-light.lua
+bin/paint.lua
 bin/path.lua
 bin/place.lua
 bin/planter.lua
@@ -73,8 +75,10 @@ lib/rob/pathing/waypoints.lua
 lib/rob/planter.lua
 lib/rob/rotated_sides.lua
 lib/rob/site/router.lua
+lib/sneaky/colors.lua
 lib/sneaky/command.lua
 lib/sneaky/number.lua
+lib/sneaky/pid.lua
 lib/sneaky/util.lua
 lib/vec3d.lua
 localrun1.lua
