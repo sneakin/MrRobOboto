@@ -2,6 +2,10 @@ local event = require("event")
 local sneaky = require("sneaky/util")
 local NetStream = require("net/stream")
 
+-- todo associate the right modem with client streams
+-- todo link cards
+-- todo bind to a modem/address, port
+
 local NetServer = {}
 function NetServer:listen(modem, port, handler)
   local e = {

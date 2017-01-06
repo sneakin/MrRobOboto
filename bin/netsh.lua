@@ -161,6 +161,13 @@ function local_io()
    }
 end
 
+-- todo term_io to support multiple screens, gpus, and keyboards
+
+-- function term_io(screen, keyboard)
+--   return {
+--   }
+-- end
+
 function tcp_io(host, port)
    local self = {}
 

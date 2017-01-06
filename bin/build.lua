@@ -1,6 +1,10 @@
 local Command = require("sneaky/command")
 local sneaky = require("sneaky/util")
 
+-- fixme needs to abort and rollback when there is no item to place
+-- todo check inventory for requirements before building
+-- todo clear the area ahead if it blocks
+
 Command:define({...}, {
     name = sneaky.basename(debug.getinfo(2, "S").source),
     usage = "width length level_height levels",
