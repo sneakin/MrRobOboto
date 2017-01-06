@@ -33,11 +33,15 @@ bin/net-disco.lua
 bin/net-stat.lua
 bin/netsh.lua
 bin/oc-light.lua
+bin/op-build.lua
+bin/op-metadata-fuzzer.lua
+bin/op-scanner.lua
 bin/paint.lua
 bin/path.lua
 bin/place.lua
 bin/planter.lua
 bin/recipe.lua
+bin/reload.lua
 bin/rollback.lua
 bin/route.lua
 bin/rsh.lua
@@ -49,6 +53,7 @@ bin/up.lua
 download.lua
 etc/rc.d/kiosk-powerd.lua
 etc/rc.d/rshd.lua
+lib/devfs/tape.lua
 lib/net.lua
 lib/net/rsh.lua
 lib/net/server.lua
@@ -77,6 +82,8 @@ lib/rob/pathing/waypoints.lua
 lib/rob/planter.lua
 lib/rob/rotated_sides.lua
 lib/rob/site/router.lua
+lib/rob/world.lua
+lib/rob/world/block_data.lua
 lib/sneaky/colors.lua
 lib/sneaky/command.lua
 lib/sneaky/number.lua
