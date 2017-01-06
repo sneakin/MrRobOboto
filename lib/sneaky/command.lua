@@ -2,6 +2,10 @@ local sneaky = require("sneaky/util")
 local sides = require("sides")
 local Command = {}
 
+-- fixme `turn -1` thought -1 was an argument
+-- todo argument parsing suitable for buildings
+-- todo multiple values
+
 local DEFAULT_OPTIONS = {
   name = "unamed",
   usage = "",
@@ -157,7 +161,11 @@ function Command:parse_args(args)
         local valid = true
 
         if type(arg.validator) == "string" then
-          valid = string.match(value, arg.validator)
+          if value then
+            valid = string.match(value, arg.validator)
+          elseif arg.allow_nil then
+            valid = true
+          end
         elseif type(arg.validator) == "function" then
           valid = arg.validator(args[n + 1])
         end
@@ -208,7 +216,7 @@ Command.Argument = {}
 function Command.Argument.Integer(options)
   return sneaky.merge(options, {
                         parse_value = tonumber,
-                        validator = "^[0-9]+"
+                        validator = "^[-+]?[0-9]+"
   })
 end
 
