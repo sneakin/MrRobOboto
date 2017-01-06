@@ -108,6 +108,26 @@ function sneaky.reverse(tbl)
   return ret
 end
 
+function sneaky.updated_values(a, b)
+  if type(a) == "table" and type(b) == "table" then
+    local changes = {}
+    
+    for ak, av in pairs(a) do
+      changes[ak] = sneaky.updated_values(av, b[ak])
+    end
+
+    return changes
+  elseif type(a) == type(b) then
+    if a == b then
+      return nil
+    else
+      return b
+    end
+  else
+    return b
+  end
+end
+
 function sneaky.remove(tbl, number)
    local r = {}
    for i = 1, number do
@@ -279,10 +299,30 @@ function sneaky.mapIter(tbl, func)
    return iter
 end
 
-function sneaky.map(iter, func)
-   for k, v in iter do
-      func(k, v)
+function sneaky.iter_map(iter, func)
+   local k, v = iter()
+   
+   function r_iter()
+      if k then
+         local ok, ov = k, v
+         k, v = iter()
+         return func(ok, ov)
+      else
+         return nil
+      end
    end
+   
+   return r_iter
+end
+
+function sneaky.map(iter, func)
+  local result = {}
+  
+  for k, v in iter do
+    result[k] = func(k, v)
+  end
+
+  return result
 end
 
 function sneaky.reduce(iter, acc, func)
@@ -297,8 +337,22 @@ function sneaky.keys(tbl)
    return sneaky.mapIter(tbl, function(k,v) return k end)
 end
 
+function sneaky.keys_list(tbl)
+  return sneaky.reduce(sneaky.keys(tbl), {}, function(a, k, v)
+                         table.insert(a, k)
+                         return a
+  end)
+end
+
 function sneaky.values(tbl)
    return sneaky.mapIter(tbl, function(k,v) return v end)
+end
+
+function sneaky.values_list(tbl)
+  return sneaky.reduce(sneaky.values(tbl), {}, function(a, k, v)
+                         table.insert(a, k)
+                         return a
+  end)
 end
 
 function sneaky.unload(pkg)
