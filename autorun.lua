@@ -26,3 +26,4 @@ if robot then
 end
 
 sneaky = require("sneaky/util")
+devfs_tape = require("devfs/tape")
