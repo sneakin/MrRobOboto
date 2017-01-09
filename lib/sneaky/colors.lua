@@ -1,8 +1,9 @@
+local bit32 = require("bit32")
 local sneaky = require("sneaky/util")
 local colors = require("colors")
 
-function rgb(r, g, b)
-  local bpp = 8
+function rgb(r, g, b, bpp)
+  bpp = bpp or 8
   r = bit32.rshift(r, 8 - bpp)
   g = bit32.rshift(g, 8 - bpp)
   b = bit32.rshift(b, 8 - bpp)
@@ -31,23 +32,31 @@ local COLORS_N = {
   [7] = "magenta"
 }
 
-local palette = {}
+local palette = {
+  rgb32 = rgb
+}
+
 function palette:new(bpp)
   return sneaky.class(self, {
   }):init(bpp)
 end
 
+function palette:rgb(r, g, b)
+  return rgb(r, g, b, self._bpp)
+end
+
 function palette:init(bpp)
-  self.rgb = {}
+  self._bpp = bpp
+  self._rgb = {}
   for color, v in pairs(COLORS) do
-    self.rgb[color] = rgb(table.unpack(v))
+    self._rgb[color] = self:rgb(table.unpack(v))
   end
 
   return self
 end
 
 function palette:get(color)
-  return self.rgb[color]
+  return self._rgb[color]
 end
 
 function palette:rand(include_black)
@@ -59,7 +68,9 @@ function palette:rand(include_black)
     c = COLORS_N[1 + math.random(#COLORS_N - 1)]
   end
 
-  return self.rgb[c]
+  return self._rgb[c]
 end
+
+palette.instance32 = palette:new(8)
 
 return palette
