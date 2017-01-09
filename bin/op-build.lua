@@ -3,7 +3,8 @@ local Command = require("sneaky/command")
 local rob_world = require("rob/world")
 local serialize = require("serialization")
 
--- fixme placing signs and torches on blocks to be built doesn't work
+-- todo simplify the json(?) value,id pairs when saving
+-- fixme flip powered levers post build
 
 Command:define({...}, {
     name = sneaky.basename(debug.getinfo(2, "S").source),
@@ -60,11 +61,14 @@ Command:define({...}, {
         end
       end
 
-      local f = io.open(args[1], "r")
-      if not f then
-        error("Unable to open file: " .. tostring(args[1]))
+      local f = io.stdin
+      if args[1] then
+        f = io.open(args[1], "r")
+        if not f then
+          error("Unable to open file: " .. tostring(args[1]))
+        end
       end
-
+      
       local second_pass = {}
       local fluid_pass = {}
       
