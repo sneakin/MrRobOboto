@@ -17,6 +17,8 @@ bin/fill-down.lua
 bin/fill-up.lua
 bin/fill-walls.lua
 bin/forward.lua
+bin/holo-view-scan.lua
+bin/holo.lua
 bin/inv-dump.lua
 bin/inv-empty.lua
 bin/inv-search-int.lua
@@ -33,7 +35,10 @@ bin/net-disco.lua
 bin/net-stat.lua
 bin/netsh.lua
 bin/oc-light.lua
+bin/op-block-data-discoverer.lua
+bin/op-block-data-generator.lua
 bin/op-build.lua
+bin/op-fill.lua
 bin/op-metadata-fuzzer.lua
 bin/op-scanner.lua
 bin/paint.lua
@@ -50,6 +55,16 @@ bin/swing.lua
 bin/turn-to.lua
 bin/turn.lua
 bin/up.lua
+data/blocks/biomesoplenty.lua
+data/blocks/chickenchunks.lua
+data/blocks/computronics.lua
+data/blocks/enderstorage.lua
+data/blocks/ic2.lua
+data/blocks/ironchest.lua
+data/blocks/lteleporters.lua
+data/blocks/minecraft.lua
+data/blocks/opencomputers.lua
+data/blocks/translocator.lua
 download.lua
 etc/rc.d/kiosk-powerd.lua
 etc/rc.d/rshd.lua
@@ -83,7 +98,9 @@ lib/rob/planter.lua
 lib/rob/rotated_sides.lua
 lib/rob/site/router.lua
 lib/rob/world.lua
-lib/rob/world/block_data.lua
+lib/rob/world/blocks/biomesoplenty.lua
+lib/rob/world/blocks/minecraft.lua
+lib/rob/world/blocks/opencomputers.lua
 lib/sneaky/colors.lua
 lib/sneaky/command.lua
 lib/sneaky/number.lua
