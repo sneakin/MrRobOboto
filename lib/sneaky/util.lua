@@ -2,7 +2,8 @@ local table = require("table")
 local sneaky = {
 }
 
-local PATH_PATTERN = "(/.*)/(.*[^/])"
+local PATH_SEPARATOR = "/"
+local PATH_PATTERN = "(" .. PATH_SEPARATOR .. ".*)" .. PATH_SEPARATOR .. "(.*[^" .. PATH_SEPARATOR .. "])"
 
 function sneaky.basename(path)
   local dir, base = string.gmatch(path, PATH_PATTERN)()
@@ -12,6 +13,10 @@ end
 function sneaky.dirname(path)
   local dir, base = string.gmatch(path, PATH_PATTERN)()
   return dir
+end
+
+function sneaky.pathjoin(...)
+  return sneaky.join({...}, PATH_SEPARATOR)
 end
 
 function sneaky.print_error(err, trace)
@@ -42,6 +47,7 @@ end
 
 function sneaky.copy(src)
    local dest = {}
+   setmetatable(dest, getmetatable(src))
 
    if src then
       for k,v in pairs(src) do
@@ -137,6 +143,14 @@ function sneaky.remove(tbl, number)
    return r
 end
 
+function sneaky.pairs(tbl)
+  local it, state, v1 = pairs(tbl)
+  return function()
+    v1,value = it(state, v1) -- assign v1
+    return v1,value
+  end
+end
+
 function sneaky.spairs(tbl)
    local k, v = next(tbl)
    
@@ -192,11 +206,7 @@ function sneaky.search(iter, item_pattern, value_function)
 
    -- Lua can't pass pairs as arguments AFAIK
    if type(iter) == "table" then
-      local it, state, v1 = pairs(iter)
-      iter = function()
-         v1,value = it(state, v1) -- assign v1
-         return v1,value
-      end
+     iter = sneaky.pairs(iter)
    end
 
    local selector = item_pattern
@@ -326,6 +336,10 @@ function sneaky.map(iter, func)
 end
 
 function sneaky.reduce(iter, acc, func)
+  if type(iter) == "table" then
+    iter = sneaky.pairs(iter)
+  end
+  
    for k, v in iter do
       acc = func(acc, k, v)
    end
@@ -355,6 +369,17 @@ function sneaky.values_list(tbl)
   end)
 end
 
+function sneaky.inverse(tbl)
+  if type(tbl) == "table" then
+    tbl = sneaky.pairsByKeys(tbl)
+  end
+  
+  return sneaky.reduce(tbl, {}, function(acc, k, v)
+                  acc[v] = k
+                  return acc
+  end)
+end
+
 function sneaky.unload(pkg)
    package.loaded[pkg] = nil
 end
@@ -374,6 +399,22 @@ function sneaky.merge(a, b)
    end
    
    return tbl
+end
+
+function sneaky.deep_merge(a, b)
+  local tbl = sneaky.copy(a)
+
+  if b then
+    for k,v in pairs(b) do
+      if type(v) == "table" then
+        tbl[k] = sneaky.deep_merge(tbl[k], v)
+      else
+        tbl[k] = v
+      end
+    end
+  end
+  
+  return tbl
 end
 
 sneaky.root = sneaky.dirname(sneaky.dirname(debug.getinfo(2, "S").source))
