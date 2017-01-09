@@ -12,6 +12,7 @@ local DEFAULT_OPTIONS = {
   required_values = 0,
   description = "Does something spectacular!",
   long_help = nil,
+  allow_unknown = nil,
   arguments = {
     help = {
       description = "Prints this message.",
@@ -42,6 +43,7 @@ function Command:new(options)
   c.required_values = options.required_values or DEFAULT_OPTIONS.required_values
   c.description = options.description or DEFAULT_OPTIONS.description
   c.long_help = options.long_help or DEFAULT_OPTIONS.long_help
+  c.allow_unknown = options.allow_unknown or DEFAULT_OPTIONS.allow_unknown
   c.aliases = sneaky.merge(DEFAULT_OPTIONS.aliases, options.aliases)
   c.run = options.run or DEFAULT_OPTIONS.run
   c.arguments = {}
@@ -70,7 +72,12 @@ function Command:execute(args)
   local ok, options, rest = self:parse_args(args)
 
   if ok then
-    return self.run(options, rest)
+    local ok, reason = self:check_args(options)
+    if ok then
+      return self.run(options, rest)
+    else
+      return self:error_message(reason)
+    end
   elseif options then
     return self:error_message(options)
   end
@@ -110,6 +117,10 @@ function Command:print_usage()
       print("    Default: " .. tostring(arg.default))
     end
 
+    if arg.required then
+      print("    Required")
+    end
+
     print("")
   end
 end
@@ -145,7 +156,7 @@ function Command:parse_args(args)
 
   while n <= #args do
     local arg = args[n]
-    local arg_name = string.match(arg, "^-(.+)")
+    local arg_name = string.match(arg, "^-+(.+)")
     
     if arg_name then
       local name, arg = self:find_argument(arg_name)
@@ -194,6 +205,8 @@ function Command:parse_args(args)
         if arg.aborts then
           return false, arg.abort_message(self)
         end
+      elseif self.allow_unknown then
+        table.insert(values, arg)
       else
         return false, "Unknown argument: " .. arg_name, n
       end
@@ -211,12 +224,36 @@ function Command:parse_args(args)
   end
 end
 
+function Command:check_args(options)
+  for name, arg in pairs(self.arguments) do
+    -- todo move validation here?
+    if arg.required
+      and options[name] == nil
+      and (not arg.boolean and arg.default == nil)
+    then
+      return false, tostring(name) .. " must have a value."
+    end
+  end
+
+  return true
+end
+
+
+----
+
 Command.Argument = {}
 
 function Command.Argument.Integer(options)
   return sneaky.merge(options, {
                         parse_value = tonumber,
                         validator = "^[-+]?[0-9]+"
+  })
+end
+
+function Command.Argument.Float(options)
+  return sneaky.merge(options, {
+                        parse_value = tonumber,
+                        validator = tonumber
   })
 end
 
