@@ -41,6 +41,7 @@ Command:define({...}, {
       local NetServer = require("net/server")
       local shell = require("shell")
       local fs = require("filesystem")
+      local event = require("event")
       local pid = require("sneaky/pid")
 
       local component = require("component")

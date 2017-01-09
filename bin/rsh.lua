@@ -11,6 +11,7 @@ Command:define({...}, {
     description = "RemoteSHell client",
     long_help = "rsh runs shell commands on a running rshd. The syntax is that for io.popen.",
     usage = "command [cmd_args...]",
+    allow_unknown = true,
     arguments = {
       port = Command.Argument.Integer({
           description = "Port on which to send messages.",
