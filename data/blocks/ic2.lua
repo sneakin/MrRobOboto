@@ -1,0 +1,32 @@
+return {
+  ["ic2:te"] = { 350 },	-- true {facing="down",material="field_151573_f",type="invalid"}
+  ["ic2:resource"] = { 351 },	-- true {type="basalt"}
+  ["ic2:leaves"] = { 352 },	-- true {check_decay="false",type="rubber",decayable="false"}
+  ["ic2:rubber_wood"] = { 353 },	-- true {state="plain_y"}
+  ["ic2:sapling"] = { 354 },	-- false {}
+  ["ic2:scaffold"] = { 355 },	-- true {type="wood"}
+  ["ic2:fence"] = { 356 },	-- true {south="false",east="false",west="false",north="false",type="iron"}
+  ["ic2:sheet"] = { 357 },	-- true {type="resin"}
+  ["ic2:glass"] = { 358 },	-- true {type="reinforced"}
+  ["ic2:foam"] = { 359 },	-- true {type="normal"}
+  ["ic2:wall"] = { 360 },	-- true {type="black"}
+  ["ic2:mining_pipe"] = { 361 },	-- true {type="pipe"}
+  ["ic2:reinforced_door"] = { 362 },	-- true {half="lower",facing="east",powered="false",hinge="left",open="false"}
+  ["ic2:uu_matter"] = { 364 },	-- true {level="0"}
+  ["ic2:construction_foam"] = { 365 },	-- true {level="0"}
+  ["ic2:coolant"] = { 366 },	-- true {level="0"}
+  ["ic2:hot_coolant"] = { 367 },	-- true {level="0"}
+  ["ic2:pahoehoe_lava"] = { 368 },	-- true {level="0"}
+  ["ic2:biomass"] = { 369 },	-- true {level="0"}
+  ["ic2:biogas"] = { 370 },	-- true {level="0"}
+  ["ic2:distilled_water"] = { 371 },	-- true {level="0"}
+  ["ic2:superheated_steam"] = { 372 },	-- true {level="0"}
+  ["ic2:steam"] = { 373 },	-- true {level="0"}
+  ["ic2:hot_water"] = { 374 },	-- true {level="0"}
+  ["ic2:weed_ex"] = { 375 },	-- true {level="0"}
+  ["ic2:air"] = { 376 },	-- true {level="0"}
+  ["ic2:hydrogen"] = { 377 },	-- true {level="0"}
+  ["ic2:oxygen"] = { 378 },	-- true {level="0"}
+  ["ic2:heavy_water"] = { 379 },	-- true {level="0"}
+  ["ic2:advanced_solar_panels_te_machines"] = { 431 },	-- true {facing="down",material="field_151573_f",type="invalid"}
+}

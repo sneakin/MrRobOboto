@@ -49,14 +49,6 @@ local WALL_SIGN_FACING = sneaky.reduce(sneaky.spairs({ "north", "north", "north"
 
 local TALLGRASS_TYPES = sneaky.reduce(sneaky.spairs({ "dead_bush", "tall_grass", "fern" }), {}, function(a, k, v) a[v] = k - 1; return a end)
 
-local OC_FACING = sneaky.reduce(sneaky.spairs({ "south", "west", "north", "east" }), {}, function(a, k, v) a[v] = k - 1; return a end)
-local BITS_OC_PITCH_UP = 4
-
-local BOP_PLANT_0_VARIANTS = sneaky.reduce(sneaky.spairs({ "shortgrass", "mediumgrass", "bush", "sprout", "poisonivy", "berrybush", "shrub", "wheatgrass", "dampgrass", "koru", "cloverpatch", "leafpile", "deadleafpile", "deadgrass", "desertgrass", "desertsprouts" }), {}, function(a, k, v) a[v] = k - 1; return a end)
-
-local BOP_PLANT_1_VARIANTS = sneaky.reduce(sneaky.spairs({ "dunegrass", "spectralfern", "thorn", "wildrice", "cattail", "rivercane", "tinycactus", "witherwart", "reed", "root", "rafflesia" }), {}, function(a, k, v) a[v] = k - 1; return a end)
-
-
 function bits_torch(args)
   return TORCH_FACING[args.facing]
 end
@@ -108,20 +100,6 @@ function bits_fluid(args)
   return tonumber(args.level)
 end
 
-local OC_PITCH = { down = 0, up = 4, north  = 8 }
-
-function bits_oc_yaw(args)
-  return bit32.bor(OC_FACING[args.yaw] or 0, OC_PITCH[args.pitch])
-end
-
-function bits_oc_facing(args)
-  return OC_FACING[args.facing]
-end
-
-function bits_oc_powered_facing(args)
-  return OC_FACING[args.facing] * 2
-end
-
 function nbt_sign(old, new_data)
   old.value.Text1.value = new_data.value.Text1.value
   old.value.Text2.value = new_data.value.Text2.value
@@ -156,11 +134,11 @@ function adjust_command_coords(cmd, origin, volume, adjustment)
           local v = vec3d:new(tonumber(x), tonumber(y), tonumber(z))
           local nv = v - origin
 
-          if nv.x < volume.x
+          if nv.x <= volume.x
             and nv.x >= 0
-            and nv.y < volume.y
+            and nv.y <= volume.y
             and nv.y >= 0
-            and nv.z < volume.z
+            and nv.z <= volume.z
             and nv.z >= 0
           then
             local fv = nv + adjustment
@@ -242,26 +220,32 @@ function sign_save_nbt(nbt, origin, volume, adjustment)
 end
 
 local BlockData = {
+  ["minecraft:air"] = {
+    nil, nil
+  },
   ["minecraft:stone"] = {
-    1, "gray",
+    nil, "gray",
     function(args)
       return STONE_VARIANTS[args.variant]
     end
   },
   ["minecraft:grass"] = {
-    2, "green",
+    nil, "green",
     function(args)
       return 0
     end
   },
   ["minecraft:dirt"] = {
-    3, "brown",
+    nil, "brown",
     function(args)
       return DIRT_VARIANTS[args.variant]
     end
   },
+  [ "minecraft:obsidian" ] = {
+    nil, "purple"
+  },
   ["minecraft:leaves"] = {
-    18, "dark_green",
+    nil, "dark_green",
     function(args)
       local v = LEAF_VARIANTS[args.variant]
       if args.check_decay == "true" then
@@ -274,33 +258,34 @@ local BlockData = {
       return v
     end
   },
-  ["minecraft:command_block"] = { 137, "orange", bits_command_block, nbt_command_block, command_block_save_nbt },
-  ["minecraft:repeating_command_block"] = { 210, "purple", bits_command_block, nbt_command_block, command_block_save_nbt },
-  ["minecraft:chain_command_block"] = { 211, "cyan", bits_command_block, nbt_command_block, command_block_save_nbt },
-  ["minecraft:torch"] = { 50, "yellow", bits_torch },
-  ["minecraft:redstone_lamp"] = { 123, "yellow", nil },
-  ["minecraft:redstone_torch"] = { 76, "red", bits_torch },
-  ["minecraft:unlit_redstone_torch"] = { 75, "dark_red", bits_torch },
+  ["minecraft:command_block"] = { nil, "orange", bits_command_block, nbt_command_block, command_block_save_nbt },
+  ["minecraft:repeating_command_block"] = { nil, "purple", bits_command_block, nbt_command_block, command_block_save_nbt },
+  ["minecraft:chain_command_block"] = { nil, "cyan", bits_command_block, nbt_command_block, command_block_save_nbt },
+  ["minecraft:torch"] = { nil, "yellow", bits_torch },
+  ["minecraft:redstone_lamp"] = { 123, "dark_yellow", nil },
+  ["minecraft:lit_redstone_lamp"] = { 124, "yellow", nil },
+  ["minecraft:redstone_torch"] = { nil, "red", bits_torch },
+  ["minecraft:unlit_redstone_torch"] = { nil, "dark_red", bits_torch },
   [ "minecraft:chest" ] = {
-    54, "light_brown",
+    nil, "light_brown",
     function(args)
       return CHEST_FACING[args.facing]
     end
   },
   [ "minecraft:ender_chest" ] = {
-    130, "light_brown",
+    nil, "light_brown",
     function(args)
       return CHEST_FACING[args.facing]
     end
   },
   [ "minecraft:furnace" ] = {
-    61, "gray",
+    nil, "gray",
     function(args)
       return FURNACE_FACING[args.facing]
     end
   },
   [ "minecraft:wooden_door" ] = {
-    64, "light_brown",
+    nil, "light_brown",
     function(args)
       local v = DOOR_FACING[args.facing]
       if args.open == "true" then
@@ -313,7 +298,7 @@ local BlockData = {
     end
   },
   [ "minecraft:stone_pressure_plate" ] = {
-    70, "light_gray",
+    nil, "light_gray",
     function(args)
       if args.powered == "true" then
         return 1
@@ -321,7 +306,7 @@ local BlockData = {
     end
   },
   [ "minecraft:wooden_pressure_plate" ] = {
-    70, "light_gray",
+    nil, "light_gray",
     function(args)
       if args.powered == "true" then
         return 1
@@ -329,15 +314,15 @@ local BlockData = {
     end
   },
   ["minecraft:redstone_wire"] = {
-    55, "dark_red",
+    nil, "dark_red",
     function(args)
       return args.power
     end
   },
   ["minecraft:stone_button"] = { 77, "light_gray", bits_button },
-  ["minecraft:wooden_button"] = { 143, "light_brown", bits_button },
+  ["minecraft:wooden_button"] = { nil, "light_brown", bits_button },
   ["minecraft:lever"] = {
-    69, "light_brown",
+    nil, "light_brown",
     function(args)
       local v = LEVER_FACING[args.facing]
       if args.powered == "true" then
@@ -346,18 +331,18 @@ local BlockData = {
       return v
     end
   },
-  ["minecraft:powered_repeater"] = { 94, "red", bits_repeater },
-  ["minecraft:unpowered_repeater"] = { 93, "dark_red", bits_repeater },
-  ["minecraft:unpowered_comparator"] = { 149, "dark_red", bits_comparator },
-  ["minecraft:powered_comparator"] = { 150, "red", bits_comparator },
+  ["minecraft:powered_repeater"] = { nil, "red", bits_repeater },
+  ["minecraft:unpowered_repeater"] = { nil, "dark_red", bits_repeater },
+  ["minecraft:unpowered_comparator"] = { nil, "dark_red", bits_comparator },
+  ["minecraft:powered_comparator"] = { nil, "red", bits_comparator },
   ["minecraft:fire"] = {
-    51, "light_orange",
+    nil, "light_orange",
     function(args)
       return tonumber(args.age)
     end
   },
   ["minecraft:fence_gate"] = {
-    107, "dark_gold",
+    nil, "dark_gold",
     function(args)
       local v = FENCE_GATE_FACING[args.facing]
 
@@ -372,66 +357,43 @@ local BlockData = {
     end
   },
   [ "minecraft:stained_glass"] = {
-    95, "light_gray",
+    nil, "light_gray",
     function(args)
       return COLORS[args.color]
     end
   },
   [ "minecraft:wool" ] = {
-    35, "white",
+    nil, "white",
     function(args)
       return COLORS[args.color]
     end
   },
   ["minecraft:standing_sign"] = {
-    63, "light_brown",
+    nil, "light_brown",
     function(args)
       return tonumber(args.rotation)
     end,
     nbt_sign, sign_save_nbt
   },
   ["minecraft:wall_sign"] = {
-    68, "light_brown",
+    nil, "light_brown",
     function(args)
       return WALL_SIGN_FACING[args.facing]
     end,
     nbt_sign, sign_save_nbt
   },
   [ "minecraft:tallgrass" ] = {
-    31, "green",
+    nil, "green",
     function(args)
       return TALLGRASS_TYPES[args.type]
     end
   },
-  [ "minecraft:water" ] = { 9, "blue", bits_fluid },
-  [ "minecraft:lava" ] = { 11, "orange", bits_fluid },
+  [ "minecraft:water" ] = { nil, "blue", bits_fluid },
+  [ "minecraft:lava" ] = { nil, "orange", bits_fluid },
   [ "minecraft:hopper" ] = {
-    154, "light_gray",
+    nil, "light_gray",
     function(args)
       return HOPPER_FACING[args.facing]
-    end
-  },
-  [ "opencomputers:keyboard" ] = { 395, "dark_gray", bits_oc_yaw },
-  [ "opencomputers:screen1" ] = { 403, "dark_gray", bits_oc_yaw },
-  [ "opencomputers:screen2" ] = { 405, "dark_gray", bits_oc_yaw },
-  [ "opencomputers:screen3" ] = { 404, "dark_gray", bits_oc_yaw },
-  [ "opencomputers:case1" ] = { 385, "dark_gray", bits_oc_powered_facing },
-  [ "opencomputers:case2" ] = { 387, "dark_gray", bits_oc_powered_facing },
-  [ "opencomputers:case3" ] = { 386, "dark_gray", bits_oc_powered_facing },
-  [ "opencomputers:diskDrive" ] = { 391, "dark_gray", bits_oc_facing },
-  [ "opencomputers:charger" ] = { 389, "dark_gray", bits_oc_facing },
-  [ "opencomputers:raid" ] = { 400, "dark_gray", bits_oc_facing },
-  [ "opencomputers:cable" ] = { 383, "dark_gray" },
-  [ "biomesoplenty:plant_0"] = {
-    333, "bright_green",
-    function(args)
-      return BOP_PLANT_0_VARIANTS[args.variant]
-    end
-  },
-  [ "biomesoplenty:plant_1"] = {
-    334, "bright_green",
-    function(args)
-      return BOP_PLANT_1_VARIANTS[args.variant]
     end
   },
   __test = {

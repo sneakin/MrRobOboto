@@ -1,30 +1,61 @@
 local sneaky = require("sneaky/util")
 local serialize = require("serialization")
 local sides = require("sides")
+local filesystem = require("filesystem")
 
+-----
 local BlockMetadata = {}
 
-BlockMetadata.blocks = sneaky.map(sneaky.spairs(sneaky.reload("rob/world/block_data")),
-                                  function(name, def)
-                                    return {
-                                      id = def[1],
-                                      color = def[2],
-                                      convertor = def[3],
-                                      nbt_updater = def[4],
-                                      nbt_saver = def[5]
-                                    }
-end)
+BlockMetadata.DIRECTORIES = {
+  sneaky.pathjoin(sneaky.root, "..", "data", "blocks"),
+  sneaky.pathjoin(sneaky.root, "rob", "world", "blocks"),
+}
 
-setmetatable(BlockMetadata.blocks, {
-               __index = function(i)
-                 return {
-                   id = 0,
-                   color = nil,
-                   convertor = nil,
-                   nbt_updater = nil
-                 }
-               end
-})
+--BlockMetadata.blocks = sneaky.table(function(tbl, i)
+--    error("Unknown block, " .. tostring(i) .. ", please add it to block_data.lua")
+--end)
+BlockMetadata.blocks = {}
+
+function BlockMetadata.massageBlockData(data)
+  return sneaky.map(sneaky.spairs(data),
+                    function(name, def)
+                      return {
+                        id = def[1],
+                        name = name,
+                        color = def[2],
+                        convertor = def[3],
+                        nbt_updater = def[4],
+                        nbt_saver = def[5]
+                      }
+  end)
+end
+
+function BlockMetadata.loadBlockDataFrom(path)
+  local new_blocks, failed = loadfile(path)
+  if new_blocks then
+    BlockMetadata.blocks = sneaky.deep_merge(BlockMetadata.blocks, BlockMetadata.massageBlockData(new_blocks()))
+  else
+    error(failed)
+  end
+end
+
+function BlockMetadata.loadBlockDataDir(dir)
+  for name in filesystem.list(dir) do
+    if string.match(name, "[.]lua$") then
+      BlockMetadata.loadBlockDataFrom(sneaky.pathjoin(dir, name))
+    end
+  end
+end
+
+function BlockMetadata.reloadBlockData()
+  for _, dir in ipairs(BlockMetadata.DIRECTORIES) do
+    BlockMetadata.loadBlockDataDir(dir)
+  end
+end
+
+BlockMetadata.reloadBlockData()
+
+----
 
 function BlockMetadata.parse(metadata)
   -- print("Metadata", metadata)
@@ -33,19 +64,21 @@ function BlockMetadata.parse(metadata)
 
   -- print("Kind", kind, "Args", args)
   local args_table = {}
+  local count = 0
 
   if args then
     for arg in string.gmatch(args, "[^,]+") do
       local name, value = string.match(arg, "(.*)=(.*)")
       if name and value then
         args_table[name] = value
+        count = count + 1
       end
     end
 
     -- print(serialize.serialize(args_table))
   end
   
-  return kind, args_table
+  return kind, args_table, count
 end
 
 function BlockMetadata.tonumber(metadata)
@@ -103,11 +136,41 @@ function BlockNBT.from_table(tbl)
   end
 end
 
+function getBlockDataById(id)
+  return sneaky.findFirst(BlockMetadata.blocks, function(k, v)
+                            return v.id == id
+  end)
+end
+
+function getBlockData(name)
+  local iter = sneaky.search(BlockMetadata.blocks, ":" .. name .. "$", function(k,v) return k end)
+  local kind, block = iter()
+  if block then
+    return block
+  end
+
+  iter = sneaky.search(BlockMetadata.blocks, ":" .. name, function(k,v) return k end)
+  local kind, block = iter()
+  if block then
+    return block
+  end
+
+  iter = sneaky.search(BlockMetadata.blocks, name, function(k,v) return k end)
+  local kind, block = iter()
+  if block then
+    return block
+  end
+
+  error("Block not found: " .. tostring(name))
+end
+
 
 -------
 local world = {
   BlockMetadata = BlockMetadata,
-  BlockNBT = BlockNBT
+  BlockNBT = BlockNBT,
+  getBlockDataById = getBlockDataById,
+  getBlockData = getBlockData
 }
 
 return world
