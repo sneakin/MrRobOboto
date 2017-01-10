@@ -59,9 +59,11 @@ function sneaky.copy(src)
 end
 
 function sneaky.append(tbl, more)
-   local new_tbl = sneaky.copy(tbl)
-   table.insert(new_tbl, more)
-   return new_tbl
+  local new_tbl = sneaky.copy(tbl)
+  for _, e in ipairs(more) do
+    table.insert(new_tbl, e)
+  end
+  return new_tbl
 end
 
 function sneaky.join(t, joiner, convertor)
@@ -242,7 +244,17 @@ function sneaky.search(iter, item_pattern, value_function)
    return myiter
 end
 
+function cast_comparison_func(func)
+  if type(func) ~= "function" then
+    return function(k, v) return v == func end
+  else
+    return func
+  end
+end
+
 function sneaky.find(tbl, func)
+  func = cast_comparison_func(func)
+  
    local ret = {}
    for k, v in pairs(tbl) do
       if func(k,v) then
@@ -253,6 +265,8 @@ function sneaky.find(tbl, func)
 end
 
 function sneaky.ifind(tbl, func)
+  func = cast_comparison_func(func)
+  
    local ret = {}
    for i, v in ipairs(tbl) do
       if func(k,v) then
@@ -263,7 +277,9 @@ function sneaky.ifind(tbl, func)
 end
 
 function sneaky.findFirst(tbl, func)
-   for k, v in pairs(tbl) do
+  func = cast_comparison_func(func)
+
+  for k, v in pairs(tbl) do
       if func(k, v) then
          return k, v
       end
