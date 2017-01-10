@@ -26,6 +26,18 @@ function vec3d:__mul(other)
    end
 end
 
+function vec3d:__div(other)
+   if type(other) == "table" then
+      return vec3d:new(self.x / other.x, self.y / other.y, self.z / other.z)
+   else
+      return vec3d:new(self.x / other, self.y / other, self.z / other)
+   end
+end
+
+function vec3d:__lt(other)
+  return self.x < other.x and self.y < other.y and self.z < other.z
+end
+
 function vec3d:new(...)
    local v = {}
    setmetatable(v, self)
@@ -65,5 +77,9 @@ function vec3d:length()
    return math.sqrt(self:length_squared())
 end
 
+vec3d.origin = vec3d:new()
+vec3d.X = vec3d:new(1, 0, 0)
+vec3d.Y = vec3d:new(0, 1, 0)
+vec3d.Z = vec3d:new(0, 0, 1)
 
 return vec3d
