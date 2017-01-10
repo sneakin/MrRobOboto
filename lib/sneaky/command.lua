@@ -17,6 +17,7 @@ local DEFAULT_OPTIONS = {
     help = {
       description = "Prints this message.",
       default = nil,
+      list = nil,
       aborts = true,
       abort_message = function(cmd)
         return cmd:print_usage()
@@ -156,6 +157,11 @@ function Command:parse_args(args)
 
   while n <= #args do
     local arg = args[n]
+    if arg == "--" then
+      values = sneaky.append(values, sneaky.subtable(args, n + 1))
+      break
+    end
+    
     local arg_name = string.match(arg, "^-+(.+)")
     
     if arg_name then
