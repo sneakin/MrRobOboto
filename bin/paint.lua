@@ -56,10 +56,12 @@ Command:define({...}, {
         gpu.setResolution(tonumber(options.width), tonumber(options.height))
       end
 
-      local touch_mode = screen.isTouchModeInverted()
-      screen.setTouchModeInverted(true)
-
-      local palette = Palette:new(gpu.getDepth())
+      local touch_mode
+      if screen.isTouchModeInverted then
+        touch_mode = screen.isTouchModeInverted()
+        screen.setTouchModeInverted(true)
+      end
+      local palette = Palette:new(8) --gpu.getDepth())
 
       local width, height = gpu.getResolution()
       local done = false
@@ -235,7 +237,9 @@ Command:define({...}, {
       gpu.setForeground(palette:get("white"))
       gpu.setBackground(palette:get("black"))
       gpu.setResolution(gw, gh)
-      screen.setTouchModeInverted(touch_mode)
+      if screen.setTouchModeInverted then
+        screen.setTouchModeInverted(touch_mode)
+      end
       
       print("Good bye.")
     end
