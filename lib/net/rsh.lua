@@ -10,7 +10,7 @@ function rsh:new(modem, host, port)
 end
 
 function rsh:execute(cmd, ...)
-  self.client:send(cmd, ...)
+  self.client:send(cmd, {...})
   return self
 end
 

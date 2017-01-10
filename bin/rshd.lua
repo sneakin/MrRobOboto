@@ -63,8 +63,8 @@ Command:define({...}, {
         shell.setPath(path)
       end
 
-      function rshd_handle(stream, cmd, ...)
-        local full_cmd = sneaky.join({cmd, ...})
+      function rshd_handle(stream, cmd, args, ...)
+        local full_cmd = sneaky.join({cmd, table.unpack(args)})
         print("Executing '" .. full_cmd .. "' for " .. tostring(stream))
         local output = io.popen(full_cmd)
         if output then

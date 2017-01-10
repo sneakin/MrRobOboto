@@ -20,6 +20,10 @@ Command:define({...}, {
       host = {
         description = "Host on which to run a shell command. Defaults to broadcasting."
       },
+      timeout = Command.Argument.Integer({
+          description = "Number of seconds to wait for a response.",
+          default = 3
+      })
     },
     run = function(options, args)
       local component = require("component")
@@ -32,17 +36,21 @@ Command:define({...}, {
 
       local client = rsh:new(modem, host, port)
 
-      print("Executing " .. sneaky.join({cmd, table.unpack(cmd_args)}))
+      io.stderr:write("Executing " .. sneaky.join({cmd, table.unpack(cmd_args)}) .. "\n")
       client:execute(cmd, table.unpack(cmd_args))
 
       local ok, line, from
 
       repeat
-        ok, from, line = client:poll(10)
+        ok, from, line = client:poll(options.timeout)
         if ok and line then
-          print(tostring(from) .. ">", line)
+          if options.host then
+            print(line)
+          else
+            print(tostring(from) .. ">", line)
+          end
         elseif not ok then
-          print("Error", ok, line)
+          io.stderr:write("Error: " .. tostring(ok) .. ": " .. tostring(line))
           break
         end
       until not ok
