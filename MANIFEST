@@ -45,6 +45,7 @@ bin/paint.lua
 bin/path.lua
 bin/place.lua
 bin/planter.lua
+bin/plasma.lua
 bin/recipe.lua
 bin/reload.lua
 bin/rollback.lua
@@ -66,6 +67,7 @@ data/blocks/minecraft.lua
 data/blocks/opencomputers.lua
 data/blocks/translocator.lua
 download.lua
+etc/rc.d/banner.lua
 etc/rc.d/kiosk-powerd.lua
 etc/rc.d/rshd.lua
 lib/devfs/tape.lua
