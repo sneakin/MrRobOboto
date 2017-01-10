@@ -4,7 +4,7 @@ local serialization = require("serialization")
 local sides = require("sides")
 local component = require("component")
 local computer = component.computer
-local robot = component.robot
+local _, robot = pcall(function() return component.robot end)
 local flipped_sides = require("rob/flipped_sides")
 
 local CheckPointError = {}

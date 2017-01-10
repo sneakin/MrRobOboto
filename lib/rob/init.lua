@@ -2,9 +2,9 @@ local math = require("math")
 local event = require("event")
 local shell = require("shell")
 local component = require("component")
-local crobot = component.robot
+local _, crobot = pcall(function() return component.robot end)
+local _, robot = pcall(require, "robot")
 local sides = require("sides")
-local robot = require("robot")
 local nav = nil
 local checkpoints = require("rob/checkpoints")
 

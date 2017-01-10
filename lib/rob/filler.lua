@@ -1,7 +1,7 @@
 local number = require("sneaky/number")
 local sides = require("sides")
 local component = require("component")
-local robot = component.robot
+local _, robot = pcall(function() return component.robot end)
 local rob = require("rob")
 local robinv = require("rob/inventory")
 local areas = require("rob/pathing/areas")

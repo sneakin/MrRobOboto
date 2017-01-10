@@ -6,8 +6,8 @@ local table = require("table")
 local sides = require("sides")
 local sneaky = require("sneaky/util")
 local component = require("component")
-local crobot = component.robot
-local inv = component.inventory_controller
+local _, crobot = pcall(function() return component.robot end)
+local _, inv = pcall(function() return component.inventory_controller end)
 
 local inventory = {}
 

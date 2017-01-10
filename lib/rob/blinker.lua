@@ -1,6 +1,6 @@
 local event = require("event")
 local component = require("component")
-local robot = component.robot
+local _, robot = pcall(function() return component.robot end)
 
 local light_timer = nil
 local light_color = 0xff
