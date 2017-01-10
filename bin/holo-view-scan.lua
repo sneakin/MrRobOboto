@@ -41,10 +41,13 @@ Command:define({...}, {
       local original_origin = f:read()
       local stats = f:read()
       local counter = 0
+      local line_num = 0
       
       repeat
         repeat
           line = f:read()
+          line_num = line_num + 1
+          --io.stderr:write(line .. "\n")
         until line == nil or string.sub(line, 1, 2) ~= "--"
 
         if line == nil then
@@ -72,7 +75,7 @@ Command:define({...}, {
           if block > 0 then
             color = 2
             
-            print(p, block, meta_string)
+            print(line_num, p, block, meta_string)
             local _, bd = rob_world.getBlockDataById(block)
             if bd then
               if bd.name == "minecraft:water" then
@@ -90,9 +93,7 @@ Command:define({...}, {
           counter = counter + 1
         end
 
-        if (counter % 256) == 0 then
-          os.sleep(1)
-        end
+        os.sleep(0)
       until line == nil
     end
 })

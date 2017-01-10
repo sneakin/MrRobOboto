@@ -3,6 +3,9 @@ local Command = require("sneaky/command")
 local rob_world = require("rob/world")
 local serialize = require("serialization")
 
+-- todo now the /fill command is off by getting its dimensions adjusted
+--   per command adjusting
+--   only adjust in the build...check against min and min+dim, could still catch coords on builds near the origin
 -- todo simplify the json(?) value,id pairs when saving
 -- fixme flip powered levers post build
 
@@ -85,10 +88,12 @@ Command:define({...}, {
       print("Size:", width, height, length)
 
       local line
-
+      local line_num = 0
+      
       repeat
         repeat
           line = f:read()
+          line_num = line_num + 1
         until line == nil or string.sub(line, 1, 2) ~= "--"
 
         if line == nil then

@@ -2,6 +2,7 @@ local sneaky = require("sneaky/util")
 local Command = require("sneaky/command")
 
 Command:define({...}, {
+    name = sneaky.basename(debug.getinfo(2, "S").source),
     description = "Uses the debug card to scan a volume printing out the blocks.",
     arguments = {
       x = Command.Argument.Integer({
