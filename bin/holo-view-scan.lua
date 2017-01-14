@@ -21,7 +21,21 @@ Command:define({...}, {
       tz = Command.Argument.Integer({
           description = "Amount to translate the scan by along the Z axis.",
           default = 0
-      })
+      }),
+      clear = {
+        description = "Do not clear prior to projecting.",
+        boolean = true
+      },
+      verbose = {
+        description = "Print out lines as they are read.",
+        boolean = true
+      },
+      blue = {
+        default = "minecraft:water"
+      },
+      red = {
+        default = "redstone"
+      }
     },
     run = function(options, args)
       local vec3d = require("vec3d")
@@ -33,7 +47,9 @@ Command:define({...}, {
       local unitv = vec3d:new(1, 1, 1)
       local translation = unitv - vec3d:new(options.tx, options.ty, options.tz)
 
-      holo.clear()
+      if options.clear then
+        holo.clear()
+      end
 
       local f = io.stdin
       local line
@@ -41,13 +57,15 @@ Command:define({...}, {
       local original_origin = f:read()
       local stats = f:read()
       local counter = 0
-      local line_num = 0
+      local line_num = 2
       
       repeat
         repeat
           line = f:read()
           line_num = line_num + 1
-          --io.stderr:write(line .. "\n")
+          if line and options.verbose then
+            io.stderr:write(tostring(line_num) .. ": " .. line .. "\n")
+          end
         until line == nil or string.sub(line, 1, 2) ~= "--"
 
         if line == nil then
@@ -78,9 +96,9 @@ Command:define({...}, {
             print(line_num, p, block, meta_string)
             local _, bd = rob_world.getBlockDataById(block)
             if bd then
-              if bd.name == "minecraft:water" then
+              if string.match(bd.name, options.blue) then
                 color = 3
-              elseif string.match(bd.name, "redstone") or string.match(bd.name, "command") then
+              elseif string.match(bd.name, options.red) then
                 color = 1
               end
             else
