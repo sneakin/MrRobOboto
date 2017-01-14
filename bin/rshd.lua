@@ -38,6 +38,7 @@ Command:define({...}, {
       }
     },
     run = function(options, args)
+      local serialization = require("serialization")
       local NetServer = require("net/server")
       local shell = require("shell")
       local fs = require("filesystem")
@@ -64,7 +65,7 @@ Command:define({...}, {
       end
 
       function rshd_handle(stream, cmd, args, ...)
-        local full_cmd = sneaky.join({cmd, table.unpack(args)})
+        local full_cmd = sneaky.join({cmd, serialization.unserialize(args)})
         print("Executing '" .. full_cmd .. "' for " .. tostring(stream))
         local output = io.popen(full_cmd)
         if output then

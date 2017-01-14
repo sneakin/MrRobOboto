@@ -1,5 +1,7 @@
 local NetStream = require("net/stream")
 local sneaky = require("sneaky/util")
+local serialization = require("serialization")
+
 local rsh = {
   DEFAULT_PORT = 23,
   TIMEOUT = 3
@@ -10,7 +12,7 @@ function rsh:new(modem, host, port)
 end
 
 function rsh:execute(cmd, ...)
-  self.client:send(cmd, {...})
+  self.client:send(cmd, serialization.serialize(...))
   return self
 end
 
