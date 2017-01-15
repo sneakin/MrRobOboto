@@ -1,4 +1,4 @@
-local DEBUG = true
+local DEBUG = nil
 
 local sides = require("sides")
 local vec3d = require("vec3d")
@@ -72,6 +72,20 @@ function router:find_paths_from(node)
    return sneaky.ifind(self.paths, function(_, path)
                           return path.from == node
    end)
+end
+
+function router:copy(other)
+  for name, position in pairs(other.nodes) do
+    self:add_node(name, position)
+  end
+
+  for _, path in ipairs(other.paths) do
+    self:add_path(path.from, path.from_side,
+                  path.to, path.to_side,
+                  path.path, path.cost, path.weight)
+  end
+
+  return self
 end
 
 function router:weight(path, to)
@@ -232,20 +246,26 @@ function router_test.populate(r)
    if not r then
       r = router:new()
    end
-   r:add_node("hub", vec3d:new(16, 65, 0))
+   -- Side            Top
+   --    M         
+   --    V       
+   -- C  H  L           C H m
+   --       m               L
+   --
    r:add_node("charger", vec3d:new(0, 65, 0))
-   r:add_node("lumber", vec3d:new(32, 65, 32))
-   r:add_node("mine", vec3d:new(32, 15, 0))
+   r:add_node("hub", vec3d:new(16, 65, 0))
    r:add_node("vault", vec3d:new(16, 75, 0))
    r:add_node("machines", vec3d:new(16, 85, 0))
+   r:add_node("lumber", vec3d:new(32, 65, 32))
+   r:add_node("mine", vec3d:new(32, 15, 0))
 
-   r:add_bipath("charger", sides.north, "hub", sides.south, {{"forward", 16}}, 16)
-   r:add_bipath("hub", sides.up, "vault", sides.down, {{"up", 10}}, 10)
-   r:add_bipath("vault", sides.up, "machines", sides.down, {{"up", 10}}, 10)
-   r:add_bipath("hub", sides.north, "lumber", sides.south,
-                { { "forward", 16 }, { "turn" }, { "forward", 32 } },
+   r:add_bipath("charger", sides.east, "hub", sides.west, {{"forward", 16}}, 16)
+   r:add_bipath("hub", sides.east, "vault", sides.west, {{"up", 10}}, 10)
+   r:add_bipath("vault", sides.east, "machines", sides.west, {{"up", 10}}, 10)
+   r:add_bipath("hub", sides.east, "lumber", sides.north,
+                { { "forward", 16 }, { "turn", -1 }, { "forward", 32 } },
                 48)
-   r:add_bipath("hub", sides.north, "mine", sides.south, { { "down", 50 }, { "forward", 16 } }, 66)
+   r:add_bipath("hub", sides.east, "mine", sides.west, { { "down", 50 }, { "forward", 16 } }, 66)
 
    return r
 end

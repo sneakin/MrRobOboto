@@ -46,7 +46,7 @@ function palette:rgb(r, g, b)
 end
 
 function palette:init(bpp)
-  self._bpp = bpp
+  self._bpp = bpp or 8
   self._rgb = {}
   for color, v in pairs(COLORS) do
     self._rgb[color] = self:rgb(table.unpack(v))
