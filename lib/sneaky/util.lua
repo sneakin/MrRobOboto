@@ -87,10 +87,14 @@ function sneaky.join(t, joiner, convertor)
 end
 
 function sneaky.class(klass, initial_state)
-   local v = sneaky.copy(initial_state)
-   setmetatable(v, klass)
-   klass.__index = klass
-   return v
+  local v = sneaky.copy(initial_state)
+  if not klass.isA then
+    klass.isA = function(this, k) return k == getmetatable(this) end
+  end
+  v.isA = klass.isA
+  setmetatable(v, klass)
+  klass.__index = klass
+  return v
 end
 
 function sneaky.table(default)
@@ -431,6 +435,11 @@ function sneaky.deep_merge(a, b)
   end
   
   return tbl
+end
+
+function sneaky.trim(str)
+  local r = string.gsub(string.gsub(str, "^[ \t\n]*", ""), "[ \t\n]*$", "")
+  return r
 end
 
 sneaky.root = sneaky.dirname(sneaky.dirname(debug.getinfo(2, "S").source))
