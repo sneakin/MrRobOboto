@@ -111,6 +111,7 @@ lib/rob/site/router.lua
 lib/rob/site/zones.lua
 lib/rob/world.lua
 lib/rob/world/blocks/biomesoplenty.lua
+lib/rob/world/blocks/ic2.lua
 lib/rob/world/blocks/minecraft.lua
 lib/rob/world/blocks/opencomputers.lua
 lib/sneaky/colors.lua
