@@ -56,7 +56,11 @@ Command:define({...}, {
         
         if not options.dry_run then
           world.setBlock(x, y, z, 0, 0)
-          world.setBlock(x, y, z, block, meta)
+          local new_meta = rob_world.BlockMetadata.tonumber(meta_string)
+          if meta ~= new_meta then
+            io.stderr:write("WARNING: Scanned metadata mismatch: " .. tostring(vec3d:new(x, y, z)) .. " " .. meta .. " " .. new_meta .. " " .. meta_string .. "\n")
+          end
+          world.setBlock(x, y, z, block, new_meta)
           if nbt then
             local kind, _ = rob_world.BlockMetadata.parse(meta_string)
             update_nbt(x, y, z, kind, nbt, origin, volume)
