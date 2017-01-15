@@ -49,6 +49,17 @@ local WALL_SIGN_FACING = sneaky.reduce(sneaky.spairs({ "north", "north", "north"
 
 local TALLGRASS_TYPES = sneaky.reduce(sneaky.spairs({ "dead_bush", "tall_grass", "fern" }), {}, function(a, k, v) a[v] = k - 1; return a end)
 
+local DOUBLE_PLANT_VARIANTS = sneaky.reduce(sneaky.spairs({ "sunflower", "syringa", "double_grass", "double_fern", "double_rose", "paeonia" }), {}, function(a, k, v) a[v] = k - 1; return a end)
+local BITS_DOUBLE_PLANT_UPPER_HALF = 8
+
+local RED_FLOWER_VARIANTS = sneaky.reduce(sneaky.spairs({ "poppy", "blue_orchid", "allium", "houstonia", "red_tulip", "orange_tulip", "white_tulip", "pink_tulip", "oxeye_daisy" }), {}, function(a, k, v) a[v] = k - 1; return a end)
+
+function table_lookup(tbl, arg)
+  return function(args)
+    return tbl[args[arg]] or 0
+  end
+end
+
 function bits_torch(args)
   return TORCH_FACING[args.facing]
 end
@@ -224,10 +235,7 @@ local BlockData = {
     nil, nil
   },
   ["minecraft:stone"] = {
-    nil, "gray",
-    function(args)
-      return STONE_VARIANTS[args.variant]
-    end
+    nil, "gray", table_lookup(STONE_VARIANTS, "variant")
   },
   ["minecraft:grass"] = {
     nil, "green",
@@ -236,10 +244,7 @@ local BlockData = {
     end
   },
   ["minecraft:dirt"] = {
-    nil, "brown",
-    function(args)
-      return DIRT_VARIANTS[args.variant]
-    end
+    nil, "brown", table_lookup(DIRT_VARIANTS, "variant")
   },
   [ "minecraft:obsidian" ] = {
     nil, "purple"
@@ -267,22 +272,13 @@ local BlockData = {
   ["minecraft:redstone_torch"] = { nil, "red", bits_torch },
   ["minecraft:unlit_redstone_torch"] = { nil, "dark_red", bits_torch },
   [ "minecraft:chest" ] = {
-    nil, "light_brown",
-    function(args)
-      return CHEST_FACING[args.facing]
-    end
+    nil, "light_brown", table_lookup(CHEST_FACING, "facing")
   },
   [ "minecraft:ender_chest" ] = {
-    nil, "light_brown",
-    function(args)
-      return CHEST_FACING[args.facing]
-    end
+    nil, "light_brown", table_lookup(CHEST_FACING, "facing")
   },
   [ "minecraft:furnace" ] = {
-    nil, "gray",
-    function(args)
-      return FURNACE_FACING[args.facing]
-    end
+    nil, "gray", table_lookup(FURNACE_FACING, "facing")
   },
   [ "minecraft:wooden_door" ] = {
     nil, "light_brown",
@@ -357,16 +353,10 @@ local BlockData = {
     end
   },
   [ "minecraft:stained_glass"] = {
-    nil, "light_gray",
-    function(args)
-      return COLORS[args.color]
-    end
+    nil, "light_gray", table_lookup(COLORS, "color")
   },
   [ "minecraft:wool" ] = {
-    nil, "white",
-    function(args)
-      return COLORS[args.color]
-    end
+    nil, "white", table_lookup(COLORS, "color")
   },
   ["minecraft:standing_sign"] = {
     nil, "light_brown",
@@ -376,25 +366,32 @@ local BlockData = {
     nbt_sign, sign_save_nbt
   },
   ["minecraft:wall_sign"] = {
-    nil, "light_brown",
-    function(args)
-      return WALL_SIGN_FACING[args.facing]
-    end,
+    nil, "light_brown", table_lookup(WALL_SIGN_FACING, "facing"),
     nbt_sign, sign_save_nbt
   },
   [ "minecraft:tallgrass" ] = {
-    nil, "green",
-    function(args)
-      return TALLGRASS_TYPES[args.type]
-    end
+    nil, "green", table_lookup(TALLGRASS_TYPES, "type")
   },
   [ "minecraft:water" ] = { nil, "blue", bits_fluid },
   [ "minecraft:lava" ] = { nil, "orange", bits_fluid },
   [ "minecraft:hopper" ] = {
-    nil, "light_gray",
+    nil, "light_gray", table_lookup(HOPPER_FACING, "facing")
+  },
+  [ "minecraft:double_plant" ] = {
+    nil, "bright_green",
     function(args)
-      return HOPPER_FACING[args.facing]
+      local v = DOUBLE_PLANT_VARIANTS[args.variant] or 0
+      if args.half == "upper" then
+        v = bit32.bor(v, BITS_DOUBLE_PLANT_UPPER_HALF)
+      end
+      return v
     end
+  },
+  [ "minecraft:red_flower" ] = {
+    nil, "red", table_lookup(RED_FLOWER_VARIANTS, "variant")
+  },
+  [ "minecraft:yellow_flower" ] = {
+    nil, "yellow", function(args) return 0 end
   },
   __test = {
     adjust_command_targets = adjust_command_targets,
