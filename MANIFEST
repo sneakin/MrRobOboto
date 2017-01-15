@@ -48,11 +48,15 @@ bin/planter.lua
 bin/plasma.lua
 bin/recipe.lua
 bin/reload.lua
+bin/rob-addr.lua
 bin/rollback.lua
 bin/route.lua
 bin/rsh.lua
 bin/rshd.lua
+bin/site-map.lua
+bin/site-nodes.lua
 bin/swing.lua
+bin/tee.lua
 bin/turn-to.lua
 bin/turn.lua
 bin/up.lua
@@ -71,7 +75,9 @@ etc/rc.d/banner.lua
 etc/rc.d/kiosk-powerd.lua
 etc/rc.d/rshd.lua
 lib/devfs/tape.lua
+lib/mat4x4.lua
 lib/net.lua
+lib/net/nano_machines.lua
 lib/net/rsh.lua
 lib/net/server.lua
 lib/net/stream.lua
@@ -79,6 +85,7 @@ lib/rob/blinker.lua
 lib/rob/buildings/glass.lua
 lib/rob/buildings/simple.lua
 lib/rob/buildings/styles.lua
+lib/rob/canvas.lua
 lib/rob/checkpoints.lua
 lib/rob/checkpoints.lua.bak
 lib/rob/clear.lua
@@ -98,7 +105,10 @@ lib/rob/pathing/volumes.lua
 lib/rob/pathing/waypoints.lua
 lib/rob/planter.lua
 lib/rob/rotated_sides.lua
+lib/rob/site/init.lua
+lib/rob/site/renderer.lua
 lib/rob/site/router.lua
+lib/rob/site/zones.lua
 lib/rob/world.lua
 lib/rob/world/blocks/biomesoplenty.lua
 lib/rob/world/blocks/minecraft.lua
@@ -115,4 +125,6 @@ mock/lib/sides.lua
 scripts/boremine.lua
 scripts/release.sh
 sites/test-site/routes.lua
+sites/tiny/init.lua
+sites/tiny/routes.lua
 test/runners/router.lua
