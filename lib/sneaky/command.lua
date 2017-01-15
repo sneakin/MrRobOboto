@@ -97,7 +97,7 @@ function Command:print_usage()
   print("")
   print("  " .. self.description)
   if self.long_help then
-    print("\n  " .. sneaky.join(self.long_help, "\n  "))
+    print("\n  " .. sneaky.join(self.long_help, "\n\n  "))
   end
   print("")
   print("Arguments")
@@ -115,7 +115,13 @@ function Command:print_usage()
     end
     
     if not arg.boolean and arg.default then
-      print("    Default: " .. tostring(arg.default))
+      if type(arg.default) == "table" then
+        if #arg.default > 0 then
+          print("    Default: " .. sneaky.join({"-" .. name, table.unpack(arg.default)}, "-" .. name))
+        end
+      else
+        print("    Default: " .. tostring(arg.default))
+      end
     end
 
     if arg.required then
