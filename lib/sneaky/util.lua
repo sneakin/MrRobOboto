@@ -442,6 +442,53 @@ function sneaky.trim(str)
   return r
 end
 
+function sneaky.range(min, max, step)
+  step = step or 1
+  max = max or min
+
+  local r = {}
+  for i = min, max, step do
+    table.insert(r, i)
+  end
+  
+  return r
+end
+
+function sneaky.permute(...)
+  local states = nil
+  local values = {}
+  local tables = {...}
+
+  return function()
+    if states == nil then
+      states = {}
+      for i, t in ipairs(tables) do
+        states[i], values[i] = next(t)
+      end
+    elseif states[1] == nil then
+      return nil
+    else
+      local n = #tables
+      states[n], values[n] = next(tables[n], states[n])
+      if states[n] == nil and n > 1 then
+        states[n], values[n] = next(tables[n])
+        for b = n - 1, 1, -1 do
+          states[b], values[b] = next(tables[b], states[b])
+          if states[b] then
+            break
+          elseif b == 1 then
+            return nil
+          else
+            states[b], values[b] = next(tables[b])
+          end
+        end
+      end
+    end
+
+    return table.unpack(values)
+  end
+end
+
 sneaky.root = sneaky.dirname(sneaky.dirname(debug.getinfo(2, "S").source))
 
 return sneaky
