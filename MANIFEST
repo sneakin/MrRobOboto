@@ -117,6 +117,7 @@ lib/rob/world/blocks/minecraft.lua
 lib/rob/world/blocks/opencomputers.lua
 lib/sneaky/colors.lua
 lib/sneaky/command.lua
+lib/sneaky/crypto.lua
 lib/sneaky/number.lua
 lib/sneaky/pid.lua
 lib/sneaky/table_tables.lua
