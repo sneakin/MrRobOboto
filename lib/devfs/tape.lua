@@ -25,33 +25,49 @@ end
 function Node:read(n)
   assert(self.mode == "r" or self.mode == "a")
   
-  local data = self.drive.read(n)
-  if string.match(data, "^[\0]+") then
+  if self:position() > self:size() then
     return nil
   else
+    local data = self.drive.read(n)
     return data
   end
 end
 
--- fixme outputing a shell command to seems to eat newlines
-
-function Node:write(data)
+function Node:write(...)
   assert(self.mode == "w")
-  return self.drive.write(data)
+
+  for _, block in ipairs({...}) do
+    local returning = nil
+    if self:position() + block:len() >= self:size() then
+      returning = true
+    end
+    
+    self.drive.write(block)
+
+    if returting then
+      return false
+    end
+  end
+
+  return true
 end
 
 function Node:size()
   return self.drive.getSize()
 end
 
+function Node:position()
+  return self.drive.getPosition()
+end
+
 function Node:seek(mode, n)
   if mode == "cur" then
     return self.drive.seek(n)
   elseif mode == "set" then
-    self.drive.seek(-self.drive.getSize())
+    self.drive.seek(-self:size())
     return self.drive.seek(n)
   elseif mode == "end" then
-    self.drive.seek(self.drive.getSize())
+    self.drive.seek(self:size())
     return self.drive.seek(-n)
   else
     error("Unsupported mode")
