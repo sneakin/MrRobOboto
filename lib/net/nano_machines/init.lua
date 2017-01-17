@@ -2,9 +2,15 @@ local sneaky = require("sneaky/util")
 local event = require("event")
 local EffectsMap = require("net/nano_machines/effects_map")
 
+local component = require("component")
+
 local nano = {}
 
 function nano:new(modem, port, timeout)
+  if not modem and component.isAvailable("modem") then
+    modem = component.modem
+  end
+  
   local i = sneaky.class(self, { modem = modem,
                                  port = 1,
                                  timeout = timeout or 1,
