@@ -4,7 +4,7 @@ local files = { ["/dev/stdout"] = io.stdout }
 for _, path in ipairs(args) do
   local f = io.open(path, "w")
   if f then
-    f.bufferMode = "no"
+    f:setvbuf("no")
     files[path] = f
   else
     io.stderr:write("Error opening " .. path)
