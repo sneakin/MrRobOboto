@@ -23,12 +23,13 @@ function Node:new(address, mode)
 end
 
 function Node:read(n)
-  assert(self.mode == "r" or self.mode == "a")
-  
-  if self:position() > self:size() then
+  assert(self.mode == "r")
+  assert(self:position() < self:size(), "EOT")
+
+  local data = self.drive.read(n)
+  if data:match("^[\0]+") then
     return nil
   else
-    local data = self.drive.read(n)
     return data
   end
 end
