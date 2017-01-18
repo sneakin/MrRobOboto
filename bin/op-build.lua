@@ -58,7 +58,7 @@ Command:define({...}, {
           world.setBlock(x, y, z, 0, 0)
           local new_meta = rob_world.BlockMetadata.tonumber(meta_string)
           if meta ~= new_meta then
-            io.stderr:write("WARNING: Scanned metadata mismatch: " .. tostring(vec3d:new(x, y, z)) .. " " .. meta .. " " .. new_meta .. " " .. meta_string .. "\n")
+            io.stderr:write("WARNING: Scanned metadata mismatch: " .. tostring(vec3d:new(x, y, z)) .. " " .. tostring(block) .. " ".. meta .. " " .. new_meta .. " " .. meta_string .. "\n")
           end
           world.setBlock(x, y, z, block, new_meta)
           if nbt then
@@ -83,10 +83,17 @@ Command:define({...}, {
       
       local original_origin = f:read()
       local stats = f:read()
-      local m = string.gmatch(stats, "([^ \t]+)")
-      local width = m()
-      local height = m()
-      local length = m()
+      if not original_origin or not stats then
+        io.stderr:write("Error reading the header.\n")
+        os.sleep(10)
+      end
+      local width, height, length
+      if stats then
+        local m = string.gmatch(stats, "([^ \t]+)")
+        width = m()
+        height = m()
+        length = m()
+      end
       local volume = vec3d:new(tonumber(width), tonumber(height), tonumber(length))
 
       print("Size:", width, height, length)
@@ -111,28 +118,31 @@ Command:define({...}, {
         local meta_string = m()
         local block = tonumber(m())
         local meta = tonumber(m()) or 0
-        m = string.gmatch(line, "\t({.*})$")
-        local raw_nbt = m()
-        local nbt = serialize.unserialize(raw_nbt or "nil")
-        local dx = ox + options.x
-        local dy = oy + options.y
-        local dz = oz + options.z
 
-        if block == rob_world.BlockMetadata.blocks["minecraft:torch"].id
-          or block == rob_world.BlockMetadata.blocks["minecraft:redstone_torch"].id
-          or block == rob_world.BlockMetadata.blocks["minecraft:unlit_redstone_torch"].id
-          or block == rob_world.BlockMetadata.blocks["minecraft:wall_sign"].id
-          or block == rob_world.BlockMetadata.blocks["minecraft:lever"].id
-          or block == rob_world.BlockMetadata.blocks["minecraft:stone_button"].id
-          or block == rob_world.BlockMetadata.blocks["minecraft:wooden_button"].id
-        then
-          table.insert(second_pass, { dx, dy, dz, meta_string, block, meta, nbt, origin, volume })
-        elseif block == rob_world.BlockMetadata.blocks["minecraft:water"].id
-          or block == rob_world.BlockMetadata.blocks["minecraft:lava"].id
-        then
-          table.insert(fluid_pass, { dx, dy, dz, meta_string, block, meta, nbt, origin, volume })
-        else
-          set_block(dx, dy, dz, meta_string, block, meta, nbt, origin, volume)
+        if ox and oy and oz and block then
+          m = string.gmatch(line, "\t({.*})$")
+          local raw_nbt = m()
+          local nbt = serialize.unserialize(raw_nbt or "nil")
+          local dx = ox + options.x
+          local dy = oy + options.y
+          local dz = oz + options.z
+
+          if block == rob_world.BlockMetadata.blocks["minecraft:torch"].id
+            or block == rob_world.BlockMetadata.blocks["minecraft:redstone_torch"].id
+            or block == rob_world.BlockMetadata.blocks["minecraft:unlit_redstone_torch"].id
+            or block == rob_world.BlockMetadata.blocks["minecraft:wall_sign"].id
+            or block == rob_world.BlockMetadata.blocks["minecraft:lever"].id
+            or block == rob_world.BlockMetadata.blocks["minecraft:stone_button"].id
+            or block == rob_world.BlockMetadata.blocks["minecraft:wooden_button"].id
+          then
+            table.insert(second_pass, { dx, dy, dz, meta_string, block, meta, nbt, origin, volume })
+          elseif block == rob_world.BlockMetadata.blocks["minecraft:water"].id
+            or block == rob_world.BlockMetadata.blocks["minecraft:lava"].id
+          then
+            table.insert(fluid_pass, { dx, dy, dz, meta_string, block, meta, nbt, origin, volume })
+          else
+            set_block(dx, dy, dz, meta_string, block, meta, nbt, origin, volume)
+          end
         end
       until line == nil
 

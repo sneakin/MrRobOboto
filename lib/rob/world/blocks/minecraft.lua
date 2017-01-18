@@ -312,7 +312,7 @@ local BlockData = {
   ["minecraft:redstone_wire"] = {
     nil, "dark_red",
     function(args)
-      return args.power
+      return tonumber(args.power)
     end
   },
   ["minecraft:stone_button"] = { 77, "light_gray", bits_button },

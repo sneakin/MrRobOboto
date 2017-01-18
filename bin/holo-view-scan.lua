@@ -83,32 +83,36 @@ Command:define({...}, {
         -- local raw_nbt = m()
         -- local nbt = serialize.unserialize(raw_nbt or "nil")
 
-        local p = vec3d:new(ox, oy, oz) + translation
-        local color = 0
+        if ox and oy and oz and block then
+          local p = vec3d:new(ox, oy, oz) + translation
+          local color = 0
 
-        if p.x > 0 and p.x <= Holo.MAX_SIZE.x
-          and p.y > 0 and p.y <= Holo.MAX_SIZE.y
-          and p.z > 0 and p.z <= Holo.MAX_SIZE.z
-        then
-          if block > 0 then
-            color = 2
-            
-            print(line_num, p, block, meta_string)
-            local _, bd = rob_world.getBlockDataById(block)
-            if bd then
-              if string.match(bd.name, options.blue) then
-                color = 3
-              elseif string.match(bd.name, options.red) then
-                color = 1
+          if p.x > 0 and p.x <= Holo.MAX_SIZE.x
+            and p.y > 0 and p.y <= Holo.MAX_SIZE.y
+            and p.z > 0 and p.z <= Holo.MAX_SIZE.z
+          then
+            if block > 0 then
+              color = 2
+              
+              print(line_num, p, block, meta_string)
+              local _, bd = rob_world.getBlockDataById(block)
+              if bd then
+                if string.match(bd.name, options.blue) then
+                  color = 3
+                elseif string.match(bd.name, options.red) then
+                  color = 1
+                end
+              else
+                io.stderr:write("Unknown block: " .. block)
               end
-            else
-              io.stderr:write("Unknown block: " .. block)
             end
-          end
-          
-          holo.set(p.x, p.y, p.z, color)
+            
+            holo.set(p.x, p.y, p.z, color)
 
-          counter = counter + 1
+            counter = counter + 1
+          end
+        else
+          io.stderr:write("Warning: trouble parsing line ", line_num)
         end
 
         os.sleep(0)
