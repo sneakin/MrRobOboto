@@ -4,7 +4,6 @@ local gpu = component.gpu
 local screen = component.screen
 
 local width, height = gpu.getResolution()
-local done = nil
 
 local colors = require("sneaky/colors")
 local palette = colors:new()
@@ -16,9 +15,15 @@ local scheme = {
   zero = palette:get("black")
 }
 
+local TIMEOUT = 60 * 100
+local last_time = os.time()
+local running = false
+
 function loop()
+  running = true
   gpu.setBackground(palette:get("black"))
   
+  local done = nil
   while not done do
     local t = os.time()
     
@@ -59,6 +64,58 @@ function loop()
 
   gpu.setBackground(palette:get("black"))
   gpu.setForeground(palette:get("white"))
+  local w, h = gpu.getResolution()
+  gpu.fill(1, 1, w, h, " ")
+
+  last_time = os.time()
+  running = false
 end
 
-loop()
+function timeout_callback()
+  local now = os.time()
+  
+  if not running and (now - last_time) > TIMEOUT then
+    loop()
+  end
+end
+
+function key_callback()
+  last_time = os.time()
+end
+
+function quit_callback()
+  done = true
+  stop()
+end
+
+local timeout_id, key_id, quitter_id
+
+function stop()
+  if timeout_id then
+    event.cancel(timeout_id)
+  end
+  if key_id then
+    event.cancel(key_id)
+  end
+  if quitter_id then
+    event.cancel(quitter_id)
+  end
+  
+  print("Plasma stopped", timeout_id, key_id, quitter_id)
+
+  timeout_id, key_id, quitter_id = nil, nil, nil
+end
+
+local args = {...}
+
+if args[1] == "test" then
+  loop()
+elseif args[1] == "stop" then
+  event.push("plasma_quit")
+else
+  timeout_id = event.timer(TIMEOUT / 100, timeout_callback, math.huge)
+  key_id = event.listen("key_down", key_callback)
+  quitter_id = event.listen("plasma_quit", quit_callback)
+
+  print("Plasma started", timeout_id, key_id, quitter_id)
+end
