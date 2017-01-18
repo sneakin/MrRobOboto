@@ -5,6 +5,7 @@ local sides = require("sides")
 Command:define({...}, {
     name = sneaky.basename(debug.getinfo(2, "S").source),
     description = "Turns a computer off if no redstone signal is supplied while enabling wake on redstone.",
+    long_help = "To build a kiosk, a pressure plate will need to be wired to a computer with a Redstone card and a Redstone switchable power connection. The Redstone wire from the pressure plate needs power one side of the computer while the computer is on while at the same time ensuring power is connected. When the pressure plate is unpowered, the computer will detect the lack of Redstone signal and turn off. Cutting the power is more of a safety measure.",
     arguments = {
       threshold = Command.Argument.Integer({
           description = "The redstone signal's strength to trigger a change.",
