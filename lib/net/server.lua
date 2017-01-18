@@ -26,6 +26,13 @@ function NetServer:init()
   assert(self.modem.isOpen(self.port))
 end
 
+function NetServer:__gc()
+  if self.handler_id then
+    event.cancel(self.handler_id)
+  end
+  self:close()
+end
+
 function NetServer:loop()
   while true do
     self:poll()
@@ -33,9 +40,20 @@ function NetServer:loop()
 end
 
 function NetServer:background()
-  return event.listen("modem_message", function(type, to, from, port, distance, reply_port, ...)
-    self.handler(NetStream:new(self.modem, from, reply_port, self.port), ...)
+  self.handler_id = event.listen("modem_message",
+                                 function(type, to, from, port, distance, reply_port, ...)
+                                   if port == self.port then
+                                     self.handler(NetStream:new(self.modem, from, reply_port, self.port, distance), ...)
+                                   end
   end)
+  return self.handler_id
+end
+
+function NetServer:stop(id)
+  event.cancel(id or self.handler_id)
+  if not id then
+    self.handler_id = nil
+  end
 end
 
 function NetServer:poll(timeout)
