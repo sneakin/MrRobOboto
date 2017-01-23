@@ -3,20 +3,61 @@ local sneaky = {
 }
 
 local PATH_SEPARATOR = "/"
-local PATH_PATTERN = "(" .. PATH_SEPARATOR .. ".*)" .. PATH_SEPARATOR .. "(.*[^" .. PATH_SEPARATOR .. "])"
+local PATH_PATTERN = PATH_SEPARATOR .. "?(.*" .. PATH_SEPARATOR .. ")" .. "(.*[^" .. PATH_SEPARATOR .. "])"
+local EXT_PATTERN = "[.](.*)$"
 
 function sneaky.basename(path)
-  local dir, base = string.gmatch(path, PATH_PATTERN)()
-  return base
+  if path then
+    local dir, base = string.gmatch(path, PATH_PATTERN)()
+    if not dir then
+      return path
+    else
+      return base
+    end
+  end
 end
 
 function sneaky.dirname(path)
-  local dir, base = string.gmatch(path, PATH_PATTERN)()
-  return dir
+  if path then
+    local dir, base = string.gmatch(path, PATH_PATTERN)()
+    if dir then
+      dir = dir:sub(1, dir:len() - 1)
+      if path:sub(1, 1) == PATH_SEPARATOR then
+        return PATH_SEPARATOR .. dir
+      else
+        return dir
+      end
+    end
+  end
+end
+
+function sneaky.extname(path)
+  if path then
+    local ext = string.gmatch(path, EXT_PATTERN)()
+    return ext
+  end
 end
 
 function sneaky.pathjoin(...)
   return sneaky.join({...}, PATH_SEPARATOR)
+end
+
+function sneaky.read_file(path)
+  local f, reason = io.open(path, "r")
+  assert(f, reason)
+  
+  local d = f:read("*a")
+  f:close()
+  return d
+end
+
+function sneaky.chars(str)
+  return function(str, index)
+    if index < str:len() then
+      index = index + 1
+      return index, str:sub(index, index)
+    end
+  end, str, 0
 end
 
 function sneaky.print_error(err, trace)
@@ -86,14 +127,25 @@ function sneaky.join(t, joiner, convertor)
   return s  
 end
 
+function table.kind_of(klass)
+  return type(klass) == "table" or klass == "table"
+end
+
+function string.kind_of(klass)
+  return type(klass) == "string" or klass == "string"
+end
+
 function sneaky.class(klass, initial_state)
   local v = sneaky.copy(initial_state)
-  if not klass.isA then
+  if not klass.kind_of then
     klass.isA = function(this, k) return k == getmetatable(this) end
+    klass.kind_of = klass.isA
   end
-  v.isA = klass.isA
+  --v.isA = klass.isA
+  if not klass.__index then
+    klass.__index = klass
+  end
   setmetatable(v, klass)
-  klass.__index = klass
   return v
 end
 
@@ -237,7 +289,7 @@ function sneaky.search(iter, item_pattern, value_function)
    local myiter = function()
       repeat
          local k, v = iter()
-         if k and v and selector(k, v) then
+         if k and selector(k, v) then
             return k, v
          end
       until not k
@@ -294,6 +346,26 @@ end
 
 function sneaky.findFirstValue(tbl, value)
    return sneaky.findFirst(tbl, function(k, v) return v == value end)
+end
+
+function sneaky.count(iter)
+  local counter = 0
+  for _, _ in iter do
+    counter = counter + 1
+  end
+  return counter
+end
+
+function sneaky.one_off_iter(v)
+  local ran = false
+  return function()
+    if ran then
+      return nil
+    else
+      ran = true
+      return 1, v
+    end
+  end
 end
 
 function sneaky.min(tbl, func)
@@ -489,6 +561,6 @@ function sneaky.permute(...)
   end
 end
 
-sneaky.root = sneaky.dirname(sneaky.dirname(debug.getinfo(2, "S").source))
+sneaky.root = sneaky.dirname(sneaky.dirname(debug.getinfo(2, "S").source:sub(2)))
 
 return sneaky
