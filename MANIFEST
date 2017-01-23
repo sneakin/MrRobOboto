@@ -3,6 +3,7 @@
 .prop
 COPYING
 MANIFEST
+MANIFEST.kiosk
 README.md
 autorun.lua
 bin/back.lua
@@ -75,6 +76,9 @@ download.lua
 etc/rc.d/banner.lua
 etc/rc.d/kiosk-powerd.lua
 etc/rc.d/rshd.lua
+firmware/drone.lua
+firmware/netlua.lua
+firmware/programmer.lua
 lib/devfs/tape.lua
 lib/mat4x4.lua
 lib/net.lua
@@ -92,6 +96,9 @@ lib/rob/checkpoints.lua
 lib/rob/checkpoints.lua.bak
 lib/rob/clear.lua
 lib/rob/crafter.lua
+lib/rob/drone/programmer.lua
+lib/rob/drone/programmer/local.lua
+lib/rob/drone/programmer/remote.lua
 lib/rob/filler.lua
 lib/rob/fillers/wall_filler.lua
 lib/rob/flipped_sides.lua
@@ -128,6 +135,8 @@ localrun1.lua
 man/example
 mock/lib/sides.lua
 scripts/boremine.lua
+scripts/drone/drone-test.lua
+scripts/drone/programmer.lua
 scripts/release.sh
 sites/test-site/routes.lua
 sites/tiny/init.lua

@@ -7,9 +7,11 @@ local modem = component.modem
 
 local DRONE_PORT = tonumber(os.getenv("PORT") or 2)
 local TIMEOUT = 8
+local seq_num = 0
 
 function drone_call(...)
-  modem.broadcast(DRONE_PORT, ...)
+  seq_num = seq_num + 1
+  modem.broadcast(DRONE_PORT, seq_num, DRONE_PORT, ...)
   return event.pull(TIMEOUT, "modem_message")
 end
 
@@ -45,7 +47,7 @@ else
   local calls = {
     { 1, "drone", "setStatusText", "IT WORKS" },
     { 1, "drone", "setLightColor", palette.instance32:rand() },
-    { 0, "status" },
+    { 0, "disco" },
     { 0, "eval", "return 2 + 3, 'hello'" },
     { 0, "drone", "detect", sides.down },
     { 2, "fly", 0, 10, 0 },
