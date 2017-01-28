@@ -45,7 +45,7 @@ Command:define({...}, {
       local holo = component.hologram
 
       local unitv = vec3d:new(1, 1, 1)
-      local translation = unitv - vec3d:new(options.tx, options.ty, options.tz)
+      local translation = unitv - vec3d:new(options.tx, -options.ty, options.tz) -- scans are zero based, holo is one like Lua
 
       if options.clear then
         holo.clear()
