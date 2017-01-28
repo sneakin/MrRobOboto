@@ -8,6 +8,15 @@ function vec3d:__tostring()
    return string.format("<%f, %f, %f, %f>", self.x, self.y, self.z, self.w)
 end
 
+function vec3d:totable()
+  return {
+    x = self.x,
+    y = self.y,
+    z = self.z,
+    w = self.w
+  }
+end
+
 function vec3d:__add(other)
    return vec3d:new(self.x + other.x, self.y + other.y, self.z + other.z, self.w + other.w)
 end

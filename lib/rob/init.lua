@@ -2,21 +2,114 @@ local math = require("math")
 local event = require("event")
 local shell = require("shell")
 local component = require("component")
-local _, crobot = pcall(function() return component.robot end)
-local _, robot = pcall(require, "robot")
-local sides = require("sides")
-local nav = nil
-local checkpoints = require("rob/checkpoints")
 
-for kind, addr in pairs(component.list()) do
-  if kind == "navigation" then
-    nav = component.navigation
+function proxy(kind)
+  local ok, comp = pcall(function() return component[kind] end)
+  if ok then
+    return comp
   end
 end
 
-local rob = {
-   checkpoints = checkpoints:new()
+local crobot = proxy("robot")
+local _, robot = pcall(require, "robot")
+local sides = require("sides")
+local nav = proxy("navigation")
+local checkpoints = require("rob/checkpoints")
+
+local sneaky = require("sneaky/util")
+local vec3d = require("vec3d")
+local RotatedSides = require("rob/rotated_sides")
+local CallbackList = require("sneaky/callback_list")
+
+local Mover = {}
+function Mover:new(robot, facing, offset)
+  return sneaky.class(self, { robot = robot,
+                              _facing = facing,
+                              _offset = vec3d:new(offset),
+                              _callbacks = CallbackList:new()
+  })
+end
+
+function Mover:facing(side)
+  if side then
+    self._facing = side
+    return self
+  else
+    return self._facing
+  end
+end
+
+function Mover:offset(v)
+  if v then
+    self._offset = v
+    return self
+  else
+    return self._offset
+  end
+end
+
+function Mover:turn(cw)
+  local ok, reason = self.robot.turn(cw)
+  if not ok then
+    return ok, reason
+  end
+  
+  if cw then
+    cw = 1
+  else
+    cw = -1
+  end
+  local old_facing = self._facing
+  self._facing = self._facing and RotatedSides.turns_to(self._facing, cw)
+  self:call_callbacks("turn", old_facing, nil)
+  return self
+end
+
+local unit_offset = {
+  [ sides.north ] = vec3d:new(0, 1, -1),
+  [ sides.south ] = vec3d:new(0, 1, 1),
+  [ sides.east ] = vec3d:new(1, 1, 0),
+  [ sides.west ] = vec3d:new(-1, 1, 0)
 }
+local dir_offset = {
+  [ sides.front ] = vec3d:new(1, 0, 1),
+  [ sides.back ] = vec3d:new(-1, 0, -1),
+  [ sides.up ] = vec3d:new(0, 1, 0),
+  [ sides.down ] = vec3d:new(0, -1, 0)
+}
+
+function Mover:move(dir)
+  local ok, reason = self.robot.move(dir)
+  if not ok then
+    return ok, reason
+  end
+  
+  local dx
+  if self._offset and self._facing then
+    dx = unit_offset[self._facing] * dir_offset[dir]
+    self._offset = self._offset + dx
+  end
+  self:call_callbacks("move", nil, dx)
+  return self
+end
+
+function Mover:call_callbacks(kind, old_facing, dx)
+  self._callbacks:call(kind,
+                       self._facing, self._offset,
+                       old_facing or self._facing, dx or vec3d:new())
+end
+
+function Mover:add_callback(func)
+  return self._callbacks:add(func)
+end
+
+function Mover:remove_callback(id)
+  return self._callbacks:remove(id)
+end
+
+local rob = {}
+rob.robot = Mover:new(crobot)
+rob.checkpoints = checkpoints:new(rob.robot)
 
 function rob.navigation()
    return nav
@@ -24,6 +117,35 @@ end
 
 function rob.hasNavigation()
    return not (nav == nil)
+end
+
+function rob.facing(side)
+  if rob.hasNavigation() then
+    return rob.navigation().getFacing()
+  else
+    return rob.robot:facing(side)
+  end
+end
+
+function rob.offset(v)
+  if rob.hasNavigation() then
+    return vec3d:new(rob.navigation().getPosition())
+  else
+    return rob.robot:offset(v)
+  end
+end
+
+function rob.origin(v)
+  if v then
+    rob._origin = vec3d:new(v)
+    return rob
+  else
+    return rob._origin
+  end
+end
+
+function rob.position()
+  return rob.offset() + rob.origin()
 end
 
 function rob.checkpoint()
@@ -134,7 +256,7 @@ end
 
 function rob.setLightColor(color)
   blinker.off()
-  robot.setLightColor(color)
+  crobot.setLightColor(color)
 end
 
 --
@@ -184,5 +306,4 @@ end
 
 -----------
 
-print("Loaded rob", rob)
 return rob

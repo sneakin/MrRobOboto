@@ -5,6 +5,8 @@ local vec3d = require("vec3d")
 local mat4x4 = require("mat4x4")
 local palette = require("sneaky/colors")
 local colors = palette.instance32
+local RotatedSides = require("rob/rotated_sides")
+local flipped_sides = require("rob/flipped_sides")
 
 local Renderer = {}
 
@@ -17,6 +19,7 @@ function Renderer:new(site, width, height)
                         showing_nodes = true,
                         showing_paths = true,
                         showing_zones = true,
+                        showing_robots = true,
                         _path_colors = {},
                         width = width,
                         height = height,
@@ -26,7 +29,15 @@ function Renderer:new(site, width, height)
                         _highlighted_zones = {}
   })
   i:screen_transform_y()
+  i._robot_observer = i.site:add_robot_observer(function(event, robot, new)
+      -- todo only draw where the robot was and is
+      i:invalidate()
+  end)
   return i
+end
+
+function Renderer:__gc()
+  i.site:remove_robot_observer(i._robot_observer)
 end
 
 function Renderer:router()
@@ -38,6 +49,7 @@ function Renderer:zoom(z)
     self._zoom = vec3d:new(z.x or self._zoom.x,
                            z.y or self._zoom.y,
                            z.z or self._zoom.z)
+    self._projected_block_size = nil
     return self:invalidate()
   else
     return self._zoom
@@ -55,39 +67,75 @@ function Renderer:translate(v)
   end
 end
 
+function min_vec3d(a, b)
+  if not a then
+    return b
+  elseif not b then
+    return a
+  end
+  
+  local min = sneaky.copy(a)
+  
+  for _, e in ipairs({"x", "y", "z"}) do
+    if min[e] == nil or b[e] < min[e] then
+      min[e] = b[e]
+    end
+  end
+
+  return min
+end
+
+function max_vec3d(a, b)
+  if not a then
+    return b
+  elseif not b then
+    return a
+  end
+
+  local max = sneaky.copy(a)
+  
+  for _, e in ipairs({"x", "y", "z"}) do
+    if max[e] == nil or b[e] > max[e] then
+      max[e] = b[e]
+    end
+  end
+
+  return max
+end
+
 function Renderer:zoom_to_fit()
   local min = { x = nil, y = nil, z = nil }
   local max = { x = nil, y = nil, z = nil }
   
   for name, position in pairs(self:router().nodes) do
-    for _, e in ipairs({"x", "y", "z"}) do
-      if min[e] == nil or position[e] < min[e] then
-        min[e] = position[e]
-      end
-      if max[e] == nil or position[e] > max[e] then
-        max[e] = position[e]
-      end
-    end
+    min = min_vec3d(min, position)
+    max = max_vec3d(max, position)
   end
 
   for name, zone in self.site:zones() do
     local pmin = zone:min()
     local pmax = pmin + zone:size()
-    
-    for _, e in ipairs({"x", "y", "z"}) do
-      if min[e] == nil or pmin[e] < min[e] then
-        min[e] = pmin[e]
-      end
-      if max[e] == nil or pmax[e] > max[e] then
-        max[e] = pmax[e]
-      end
-    end
+
+    min = min_vec3d(min, pmin)
+    max = max_vec3d(max, pmax)
+  end
+
+  for _, robot in self.site:robots() do
+    min = min_vec3d(min, robot:position())
+    max = max_vec3d(max, robot:position())
   end
 
   min = vec3d:new(min.x, min.y, min.z)
   max = vec3d:new(max.x, max.y, max.z)
-
+  
   local margin = 2
+
+  for _, e in ipairs({"x", "y", "z"}) do
+    if min[e] == max[e] then
+      max[e] = min[e] + margin
+    end
+  end
+
   local screen_vec = vec3d:new(self.width - margin * 2, self.height - margin * 2, 0.0)
   local st_inv = self._screen_transform:as3x3():transpose()
   local rot_screen = st_inv * screen_vec
@@ -140,6 +188,7 @@ function Renderer:screen_transform(m)
   if m then
     assert(m:isA(mat4x4))
     self._screen_transform = m
+    self._projected_block_size = nil
     return self:invalidate()
   else
     return self._screen_transform
@@ -174,11 +223,11 @@ function Renderer:draw_node(canvas, name, position, color)
         color = colors:get("white")
       end
     end
-    
+
     canvas
       :set_foreground(color)
       :set_background("black")
-      :set(p.x, p.y, "*")
+      :set(p.x, p.y, (name or "*"):sub(1, math.ceil(self:projected_block_size().x)))
   end
   
   return self
@@ -267,7 +316,7 @@ function Renderer:draw(canvas)
     :set_background("black")
     :clear()
 
-  return self:draw_zones(canvas):draw_paths(canvas):draw_nodes(canvas):draw_status(canvas)
+  return self:draw_zones(canvas):draw_paths(canvas):draw_nodes(canvas):draw_robots(canvas):draw_status(canvas)
 end
 
 function Renderer:show_nodes(yes)
@@ -339,17 +388,8 @@ Renderer._char_for_dirs = {
   [ sides.down ] = "d"
 }
 
-local TURN_MAPPING = {
-  [ sides.north ] = 0,
-  [ sides.west ] = 1,
-  [ sides.south ] = 2,
-  [ sides.east ] = 3
-}
-
-local REVERSE_TURN_MAPPING = sneaky.inverse(TURN_MAPPING)
-
 function Renderer:turns_from(dir, amount)
-  return REVERSE_TURN_MAPPING[(TURN_MAPPING[dir] + amount) % 4]
+  return RotatedSides.turns_from(dir, amount)
 end
 
 function Renderer:color_for_path(path)
@@ -359,8 +399,6 @@ function Renderer:color_for_path(path)
   
   return self._path_colors[path]
 end
-
-local flipped_sides = require("rob/flipped_sides")
 
 function Renderer:draw_path(path, canvas, color, highlighted)
   local path_start = assert(self:router().nodes[path.from], "no from from which to draw: " .. tostring(path.from) .. "->" .. tostring(path.to))
@@ -478,9 +516,50 @@ end
 function Renderer:redraw(canvas)
   if self._invalidated then
     self:draw(canvas)
-    self._inlavidated = false
+    self._invalidated = false
   end
 
+  return self
+end
+
+function Renderer:draw_robots(canvas)
+  if self.showing_robots then
+    for _, robot in self.site:robots() do
+      self:draw_robot(canvas, robot)
+    end
+  end
+  
+  return self
+end
+
+function Renderer:projected_block_size()
+  if self._projected_block_size == nil then
+    self._projected_block_size = self._screen_transform * self._zoom
+  end
+
+  return self._projected_block_size
+end
+
+function Renderer:draw_robot(canvas, robot)
+  if not robot then
+    return
+  end
+  
+  if robot:position() then
+    local p = self:project_point(robot:position())
+    if p.x > 0 and p.y > 0 and p.x <= self.width and p.y <= self.height then
+      local bg = "white"
+      if robot.energy < 10 or (os.time() - robot.last_seen) > (10 * 60) then
+        bg = "red"
+      end
+
+      canvas
+        :set_foreground("black")
+        :set_background("white")
+        :set(p.x, p.y, (robot.name or "*"):sub(1, math.ceil(self:projected_block_size().x)))
+    end
+  end
+  
   return self
 end
 

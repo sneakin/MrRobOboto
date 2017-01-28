@@ -1,3 +1,4 @@
+local sneaky = require("sneaky/util")
 local sides = require("sides")
 
 local rotated_sides = {
@@ -27,4 +28,20 @@ local rotated_sides = {
    }
 }
 
+local TURN_MAPPING = {
+  [ sides.north ] = 0,
+  [ sides.west ] = 1,
+  [ sides.south ] = 2,
+  [ sides.east ] = 3
+}
+
+local REVERSE_TURN_MAPPING = sneaky.inverse(TURN_MAPPING)
+
+function rotated_sides.turns_from(dir, amount)
+  return REVERSE_TURN_MAPPING[(TURN_MAPPING[dir] + amount) % 4]
+end
+
+function rotated_sides.turns_to(dir, amount)
+  return rotated_sides.turns_from(dir, -amount)
+end
 return rotated_sides

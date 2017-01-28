@@ -40,8 +40,9 @@ local cp = {
    CheckPointError = CheckPointError
 }
 
-function cp:new()
-   local c = {
+function cp:new(robot)
+  local c = {
+    robot = robot,
       points = {}
    }
    setmetatable(c, self)
@@ -175,7 +176,7 @@ function cp:turn(times)
    times = times or 1
    
    for i = 1, math.abs(times) do
-      local good, err = robot.turn(times < 0)
+      local good, err = self.robot:turn(times < 0)
       if good then
          self:push(cp.turn, not(times < 0))
       else
@@ -202,7 +203,7 @@ function cp:move(dir)
    
    repeat
       times = times + 1
-      good, err = robot.move(dir)
+      good, err = self.robot:move(dir)
       if err == "entity" then
          print("An entity is in the way.")
          os.sleep(3)

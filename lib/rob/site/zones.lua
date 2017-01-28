@@ -16,6 +16,13 @@ function zones.box:routes(router)
   return self
 end
 
+function zones.box:totable()
+  return {
+    min = self._min:totable(),
+    size = self._size:totable()
+  }
+end
+
 function zones.box:min()
   return self._min
 end
@@ -31,6 +38,13 @@ function zones.mine:new(name, min, size)
                         _min = min,
                         _size = size
   })
+end
+
+function zones.mine:totable()
+  return {
+    min = self._min:totable(),
+    size = self._size:totable()
+  }
 end
 
 function zones.mine:routes(router)
@@ -63,6 +77,17 @@ function zones.glass_building:new(name, corner_stone, width, length, level_heigh
                         levels = levels,
                         build_dir = build_dir
   })
+end
+
+function zones.glass_building:totable()
+  return {
+    corner_stone = self.corner_stone:totable(),
+    width = self.width,
+    length = self.length,
+    level_height = self.level_height,
+    levels = self.levels,
+    build_dir = self.build_dir
+  }
 end
 
 function zones.glass_building:min()

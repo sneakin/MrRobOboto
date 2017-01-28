@@ -92,7 +92,8 @@ function charger(router, location, station, name, position, building_dir)
 
 end
 
-local router = router:new()
+local args = {...}
+local router = args[1] or router:new()
 
 building.routes(router, "building-1", v:new(246, 66, 120), sides.east, 16, 10, 5, 8)
 charger(router, "building-1:floor-1", 0, "building-1:charger-1", v:new(251, 68, 113), sides.east)

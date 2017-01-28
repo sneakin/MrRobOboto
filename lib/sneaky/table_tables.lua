@@ -11,7 +11,7 @@ function TableTables:set(keys, value)
   return self:_set(keys, value)
 end
 
-function TableTables:_Set(keys, value)
+function TableTables:_set(keys, value)
   if #keys == 1 then
     self._values[keys[1]] = value
   elseif #keys > 1 then

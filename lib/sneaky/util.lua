@@ -117,11 +117,12 @@ function sneaky.join(t, joiner, convertor)
 
   local s = ""
 
-  for n, v in ipairs(t) do
+  for n = 1, #t do
+    v = t[n]
     if n ~= 1 then
       s = s .. joiner
     end
-    s = s .. convertor(v)
+    s = s .. (convertor(v) or "")
   end
 
   return s  

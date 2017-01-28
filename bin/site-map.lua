@@ -25,7 +25,7 @@ Command:define({...}, {
     arguments = {
       site = {
         description = "The site definition to map.",
-        default = sneaky.pathjoin(sneaky.root, "../sites/default.site")
+        --default = sneaky.pathjoin(sneaky.root, "../sites/default.site")
       },
       x = Command.Argument.Integer({
           description = "The map's position on the X (east/west) axis."
@@ -89,10 +89,15 @@ Command:define({...}, {
       local Canvas = require("rob/canvas")
       local term = require("term")
       local Site = require("rob/site")
-      
-      local site_f = loadfile(sneaky.pathjoin(options.site, "init.lua"))
-      local site = site_f and site_f()
-      site = site or Site:new()
+
+      local site
+
+      if options.site then
+        local site_f = loadfile(sneaky.pathjoin(options.site, "init.lua"))
+        site = site_f and site_f()
+      end
+
+      site = site or Site.instance()
       
       local routes_f = loadfile(sneaky.pathjoin(options.site, "routes.lua"))
       local routes = routes_f and routes_f()
@@ -235,17 +240,21 @@ Command:define({...}, {
       }
 
       while not done do
-        local _, addr, ascii, key, player = event.pull("key_down")
-        ascii = string.char(ascii)
-        if keyboard.isShiftDown() then
-          scale = 8
-          ascii = string.upper(ascii)
+        local kind, addr, ascii, key, player = event.pull(1, "key_down")
+
+        if kind == "key_down" then
+          ascii = string.char(ascii)
+          if keyboard.isShiftDown() then
+            scale = 8
+            ascii = string.upper(ascii)
+          else
+            scale = 1
+          end
+          local hand = handlers[key] or handlers[ascii]
+          if hand then
+            hand()
+          end
         else
-          scale = 1
-        end
-        local hand = handlers[key] or handlers[ascii]
-        if hand then
-          hand()
         end
 
         sm:redraw(canvas)
