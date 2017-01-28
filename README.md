@@ -10,7 +10,7 @@ The goal is to have a robot that's fully capable of making another robot.
 Legal
 ---
 
-Copyright (C) 2015, 2016 Nolan Eakins <nolan@eakins.net>.
+Copyright (C) 2015-2017 Nolan Eakins <nolan@eakins.net>.
 
 Licensed under the GPL 3.0.
 
