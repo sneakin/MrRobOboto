@@ -5,6 +5,8 @@ Presently just a collection of basic functions and scripts to move, clear, build
 
 The goal is to have a robot that's fully capable of making another robot.
 
+![The site-map](anim/output.gif)
+
 Legal
 ---
 
