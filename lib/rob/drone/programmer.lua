@@ -27,6 +27,9 @@ local CHEST_DRONE_EEPROM_SLOT = { "chest", 3 }
 -- network. Placing the transposer next to a computer running the netlua.lua
 -- firmware and passing a Programmer.Remote instance will then use
 -- the first netlua.lua node as the eeprom writer.
+--
+-- todo detect if it's a robot, tablet, or drone: computer case, tablet case, drone case
+-- todo go beyond programming and pull pieces from a chest, make requests for inventory
 local Programmer = {
   Remote = RemoteProgrammer,
   Local = LocalProgrammer
