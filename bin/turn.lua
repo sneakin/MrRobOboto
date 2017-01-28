@@ -7,14 +7,12 @@ Command:define({...}, {
     description = "Turns Rob N quarter turns.",
     run = function(options, args)
       local rob = require("rob")
-
+      local sides = require("rob/sides")
+      
       local times = tonumber(args[1]) or 1
 
       rob.turn(times)
-
-      if rob.hasNavigation() then
-        print(rob.navigation.getFacing())
-      end
+      print(sides.tostring(rob.facing()))
 
       return 0
     end
