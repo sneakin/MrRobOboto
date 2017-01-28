@@ -1,12 +1,28 @@
 local args = {...}
+print(...)
 
-local path = args[1]
+local path = string.match(args[2], "(.+/).+$")
 
-package.path = package.path .. ";" .. path .. "/lib/?.lua"
-package.path = package.path .. ";" .. path .. "/lib/?/init.lua"
+local package_paths = {}
+for p in string.gmatch(package.path, "[^;]+") do
+  if not string.match(p, path) then
+    table.insert(package_paths, p)
+  end
+end
 
-package.path = package.path .. ";" .. path .. "/mock/lib/?.lua"
-package.path = package.path .. ";" .. path .. "/mock/lib/?/init.lua"
+local paths = {
+  "lib/?.lua",
+  "lib/?/init.lua",
+  "mock/lib/?.lua",
+  "mock/lib/?/init.lua"
+}
+for _, p in ipairs(paths) do
+  table.insert(package_paths, path .. p)
+end
 
-pkg=require(args[2])
-print(loadstring(args[3])())
+package.path = table.concat(package_paths, ";")
+
+--pkg=require(args[2])
+--print(loadstring(args[3])())
+
+return {}
